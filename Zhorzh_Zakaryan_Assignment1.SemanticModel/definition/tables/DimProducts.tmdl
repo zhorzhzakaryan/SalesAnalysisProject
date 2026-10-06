@@ -1,0 +1,149 @@
+table DimProducts
+	lineageTag: 16024411-82e0-4d53-87ec-9c287a271114
+
+	column product_id_pk_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: e36d1abf-cadb-4491-b22e-cb051a9565d7
+		summarizeBy: none
+		sourceColumn: product_id_pk_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_id_nk
+		dataType: int64
+		formatString: 0
+		lineageTag: 54c32cbf-2976-4a06-86d7-5dcfd359d757
+		summarizeBy: sum
+		sourceColumn: product_id_nk
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProductName
+		dataType: string
+		lineageTag: c79fb619-75b2-44a8-89b8-faa08045f8a7
+		summarizeBy: none
+		sourceColumn: ProductName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Brand
+		dataType: string
+		lineageTag: 2f441d18-fd2a-4f4f-abad-bbc118be159d
+		summarizeBy: none
+		sourceColumn: Brand
+
+		annotation SummarizationSetBy = Automatic
+
+	column Description
+		dataType: string
+		lineageTag: d551d6f1-e82a-4649-8bcf-f86b9bf1e2d1
+		summarizeBy: none
+		sourceColumn: Description
+
+		annotation SummarizationSetBy = Automatic
+
+	column BasePrice
+		dataType: double
+		lineageTag: d5de1c0b-6c3c-497d-a270-d0404b790d73
+		summarizeBy: sum
+		sourceColumn: BasePrice
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Currency
+		dataType: string
+		lineageTag: acfb709e-f840-49ce-8cb4-b7947b5389de
+		summarizeBy: none
+		sourceColumn: Currency
+
+		annotation SummarizationSetBy = Automatic
+
+	column Weight_kg
+		dataType: double
+		lineageTag: 7663503c-b7b2-4240-a25a-27d809d26f2b
+		summarizeBy: sum
+		sourceColumn: Weight_kg
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column LaunchDate
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: d74dc97e-531c-4599-97a2-72de5ab7cc24
+		summarizeBy: none
+		sourceColumn: LaunchDate
+
+		variation Variation
+			isDefault
+			relationship: dc581182-982d-4d29-985e-09b662c1a0e9
+			defaultHierarchy: LocalDateTable_fc80cfce-29ca-4be7-83aa-4f153bd1ea84.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column IsActive
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 835cb9ff-542b-4be7-b7a4-88da8fa60b69
+		summarizeBy: none
+		sourceColumn: IsActive
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProductCategories
+		dataType: string
+		lineageTag: 3a3dd056-3506-472f-a283-1d02d28112c2
+		summarizeBy: none
+		sourceColumn: ProductCategories
+
+		annotation SummarizationSetBy = Automatic
+
+	column CategoryName
+		dataType: string
+		lineageTag: 81b176d8-7bee-4db2-bc2c-aa88dbf3a013
+		summarizeBy: none
+		sourceColumn: CategoryName
+
+		annotation SummarizationSetBy = Automatic
+
+	partition DimProducts = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents("C:\Users\DELL\Desktop\ACA_PowerBI_Assignment1\RawData\ecommerce_products.xlsx"), null, true),
+				    Products_Sheet = Source{[Item="Products",Kind="Sheet"]}[Data],
+				    #"Promoted Headers" = Table.PromoteHeaders(Products_Sheet, [PromoteAllScalars=true]),
+				    #"Merged Queries" = Table.NestedJoin(#"Promoted Headers", {"product_category_id_fk"}, ProductCategories, {"product_category_id_pk"}, "ProductCategories", JoinKind.LeftOuter),
+				    #"Expanded ProductCategories" = Table.ExpandTableColumn(#"Merged Queries", "ProductCategories", {"CategoryName"}, {"ProductCategories.CategoryName"}),
+				    #"Merged Queries1" = Table.NestedJoin(#"Expanded ProductCategories", {"product_subcategory_id_fk"}, ProductSubCategories, {"product_subcategory_id_pk"}, "ProductSubCategories", JoinKind.LeftOuter),
+				    #"Expanded ProductSubCategories" = Table.ExpandTableColumn(#"Merged Queries1", "ProductSubCategories", {"SubCategoryName"}, {"SubCategoryName"}),
+				    #"Split Column by Delimiter" = Table.SplitColumn(#"Expanded ProductSubCategories", "BasePriceWithCurrency", Splitter.SplitTextByEachDelimiter({" "}, QuoteStyle.Csv, false), {"BasePriceWithCurrency.1", "BasePriceWithCurrency.2"}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Split Column by Delimiter",{{"BasePriceWithCurrency.1", type number}, {"BasePriceWithCurrency.2", type text}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"BasePriceWithCurrency.1", "BasePrice"}, {"BasePriceWithCurrency.2", "Currency"}}),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Renamed Columns",{{"BasePrice", type number}}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Changed Type1",{"product_category_id_fk", "product_subcategory_id_fk"}),
+				    #"Renamed Columns1" = Table.RenameColumns(#"Removed Columns",{{"product_id_pk", "product_id_nk"}}),
+				    #"Added Index" = Table.AddIndexColumn(#"Renamed Columns1", "Index", 0, 1, Int64.Type),
+				    #"Reordered Columns" = Table.ReorderColumns(#"Added Index",{"Index", "product_id_nk", "ProductName", "Brand", "Description", "BasePrice", "Currency", "Weight_kg", "LaunchDate", "IsActive", "ProductCategories.CategoryName", "SubCategoryName"}),
+				    #"Renamed Columns2" = Table.RenameColumns(#"Reordered Columns",{{"Index", "product_id_pk_sk"}}),
+				    #"Removed Columns1" = Table.RemoveColumns(#"Renamed Columns2",{"product_id_pk_sk"}),
+				    #"Added Index1" = Table.AddIndexColumn(#"Removed Columns1", "Index", 0, 1, Int64.Type),
+				    #"Removed Columns2" = Table.RemoveColumns(#"Added Index1",{"Index"}),
+				    #"Added Index2" = Table.AddIndexColumn(#"Removed Columns2", "Index", 1, 1, Int64.Type),
+				    #"Renamed Columns3" = Table.RenameColumns(#"Added Index2",{{"Index", "product_id_pk_sk"}}),
+				    #"Reordered Columns1" = Table.ReorderColumns(#"Renamed Columns3",{"product_id_pk_sk", "product_id_nk", "ProductName", "Brand", "Description", "BasePrice", "Currency", "Weight_kg", "LaunchDate", "IsActive", "ProductCategories.CategoryName", "SubCategoryName"}),
+				    #"Changed Type2" = Table.TransformColumnTypes(#"Reordered Columns1",{{"product_id_nk", Int64.Type}, {"Weight_kg", type number}, {"LaunchDate", type date}, {"IsActive", type logical}, {"ProductName", type text}, {"Brand", type text}, {"Description", type text}, {"SubCategoryName", type text}, {"ProductCategories.CategoryName", type text}}),
+				    #"Renamed Columns4" = Table.RenameColumns(#"Changed Type2",{{"ProductCategories.CategoryName", "ProductCategories"}, {"SubCategoryName", "CategoryName"}})
+				in
+				    #"Renamed Columns4"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

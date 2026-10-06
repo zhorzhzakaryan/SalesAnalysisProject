@@ -1,0 +1,231 @@
+expression FolderPathParam = "C:\Users\DELL\Desktop\ACA_PowerBI_Assignment1\" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 8b5730f6-6073-47d3-afa4-ca446ca105d5
+	queryGroup: 'Transform File from ecommerce_sales_transactions\Helper Queries'
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Text
+
+expression ProductCategories =
+		let
+		    Source = Excel.Workbook(File.Contents("C:\Users\DELL\Desktop\ACA_PowerBI_Assignment1\RawData\ecommerce_products.xlsx"), null, true),
+		    ProductCategories_Sheet = Source{[Item="ProductCategories",Kind="Sheet"]}[Data],
+		    #"Promoted Headers" = Table.PromoteHeaders(ProductCategories_Sheet, [PromoteAllScalars=true])
+		in
+		    #"Promoted Headers"
+	lineageTag: 8a1ad5b5-291c-4c42-bc25-43c0078a02c8
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression ProductSubCategories =
+		let
+		    Source = Excel.Workbook(File.Contents("C:\Users\DELL\Desktop\ACA_PowerBI_Assignment1\RawData\ecommerce_products.xlsx"), null, true),
+		    ProductSubCategories_Sheet = Source{[Item="ProductSubCategories",Kind="Sheet"]}[Data],
+		    #"Promoted Headers" = Table.PromoteHeaders(ProductSubCategories_Sheet, [PromoteAllScalars=true])
+		in
+		    #"Promoted Headers"
+	lineageTag: 996ec1a5-462d-499a-9c1a-8c1cda3c8058
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression Parameter1 = #"Sample File" meta [IsParameterQuery=true, BinaryIdentifier=#"Sample File", Type="Binary", IsParameterQueryRequired=true]
+	lineageTag: 4c7bb424-1128-490a-9eab-f130540cb055
+	queryGroup: 'Transform File from ecommerce_sales_transactions\Helper Queries'
+
+	annotation PBI_ResultType = Binary
+
+expression 'Sample File' =
+		let
+		    Source = Folder.Files(FolderPathParam & "RawData\ecommerce_sales_transactions"),
+		    Navigation1 = Source{0}[Content]
+		in
+		    Navigation1
+	lineageTag: e1713c3b-f60d-4922-8d55-8e87e979dc01
+	queryGroup: 'Transform File from ecommerce_sales_transactions\Helper Queries'
+
+	annotation PBI_ResultType = Binary
+
+expression 'Transform Sample File' =
+		let
+		    Source = Csv.Document(Parameter1,[Delimiter=",", Columns=13, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+		    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true])
+		in
+		    #"Promoted Headers"
+	lineageTag: 587edf76-e3f7-4dbd-82f8-adb178082967
+	queryGroup: 'Transform File from ecommerce_sales_transactions'
+
+	annotation PBI_ResultType = Table
+
+expression 'Transform File' =
+		let
+		    Source = (Parameter1) => let
+		        Source = Csv.Document(Parameter1,[Delimiter=",", Columns=13, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+		        #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true])
+		    in
+		        #"Promoted Headers"
+		in
+		    Source
+	mAttributes: [ FunctionQueryBinding = "{""exemplarFormulaName"":""Transform Sample File""}" ]
+	lineageTag: 7f23e0b2-fa26-4553-b436-547e66bd84a6
+	queryGroup: 'Transform File from ecommerce_sales_transactions\Helper Queries'
+
+	annotation PBI_ResultType = Function
+
+expression Parameter2 = #"Sample File (2)" meta [IsParameterQuery=true, BinaryIdentifier=#"Sample File (2)", Type="Binary", IsParameterQueryRequired=true]
+	lineageTag: 94661c12-40a7-4c71-af25-8e9c72b8aaf8
+	queryGroup: 'Transform File from ecommerce_sales_transactions\Helper Queries\Transform File from ecommerce_sales_transactions\Helper Queries'
+
+	annotation PBI_ResultType = Binary
+
+expression 'Sample File (2)' =
+		let
+		    Source = Folder.Files("C:\Users\DELL\Desktop\RawData_PowerBI_ACA_Assignment1\ecommerce_sales_transactions"),
+		    Navigation1 = Source{0}[Content]
+		in
+		    Navigation1
+	lineageTag: cafbb13a-7ab3-4d38-aee1-8f72f0f49a9a
+	queryGroup: 'Transform File from ecommerce_sales_transactions\Helper Queries\Transform File from ecommerce_sales_transactions\Helper Queries'
+
+	annotation PBI_ResultType = Binary
+
+expression 'Transform Sample File (2)' =
+		let
+		    Source = Csv.Document(Parameter2,[Delimiter=",", Columns=13, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+		    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true])
+		in
+		    #"Promoted Headers"
+	lineageTag: 4284228f-242b-4a0b-a676-452b7577280f
+	queryGroup: 'Transform File from ecommerce_sales_transactions\Helper Queries\Transform File from ecommerce_sales_transactions'
+
+	annotation PBI_ResultType = Table
+
+expression 'Transform File (2)' =
+		let
+		    Source = (Parameter2) => let
+		        Source = Csv.Document(Parameter2,[Delimiter=",", Columns=13, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+		        #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true])
+		    in
+		        #"Promoted Headers"
+		in
+		    Source
+	mAttributes: [ FunctionQueryBinding = "{""exemplarFormulaName"":""Transform Sample File (2)""}" ]
+	lineageTag: ddbd43d6-3d16-4676-b7d1-6a3e3f5d7c77
+	queryGroup: 'Transform File from ecommerce_sales_transactions\Helper Queries\Transform File from ecommerce_sales_transactions\Helper Queries'
+
+	annotation PBI_ResultType = Function
+
+expression Africa =
+		let
+		    Source = Web.BrowserContents("https://simple.wikipedia.org/wiki/List_of_countries_by_continents"),
+		    #"Extracted Table From Html" = Html.Table(Source, {{"Column1", "TABLE[id='mwKg'] > * > TR > :nth-child(1)"}, {"Column2", "TABLE[id='mwKg'] > * > TR > :nth-child(2)"}, {"Column3", "TABLE[id='mwKg'] > * > TR > :nth-child(3)"}, {"Column4", "TABLE[id='mwKg'] > * > TR > :nth-child(4)"}, {"Column5", "TABLE[id='mwKg'] > * > TR > :nth-child(5)"}, {"Column6", "TABLE[id='mwKg'] > * > TR > :nth-child(6)"}, {"Column7", "TABLE[id='mwKg'] > * > TR > :nth-child(7)"}, {"Column8", "TABLE[id='mwKg'] > * > TR > :nth-child(8)"}}, [RowSelector="TABLE[id='mwKg'] > * > TR"]),
+		    #"Promoted Headers" = Table.PromoteHeaders(#"Extracted Table From Html", [PromoteAllScalars=true]),
+		    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"", Int64.Type}, {"Flag", type text}, {"English Name#(lf)[1][2][3][4]", type text}, {"Capital City / Capital Cities#(lf)[3][5][6]", type text}, {"Population 2021#(lf)[7][8]", Int64.Type}, {"Area[a][b]#(lf)[9]", type text}, {"Currency#(lf)[3]", type text}, {"Map", type text}}),
+		    #"Added Custom" = Table.AddColumn(#"Changed Type", "Continent", each "Africa"),
+		    #"Changed Type1" = Table.TransformColumnTypes(#"Added Custom",{{"Continent", type text}}),
+		    #"Reordered Columns" = Table.ReorderColumns(#"Changed Type1",{"", "Flag", "English Name#(lf)[1][2][3][4]", "Capital City / Capital Cities#(lf)[3][5][6]", "Population 2021#(lf)[7][8]", "Area[a][b]#(lf)[9]", "Currency#(lf)[3]", "Map", "Continent"}),
+		    #"Removed Columns" = Table.RemoveColumns(#"Reordered Columns",{"Flag", "Map"}),
+		    #"Renamed Columns" = Table.RenameColumns(#"Removed Columns",{{"English Name#(lf)[1][2][3][4]", "CountryName"}, {"Capital City / Capital Cities#(lf)[3][5][6]", "Capital City / Capital Cities"}, {"Population 2021#(lf)[7][8]", "Population"}, {"Area[a][b]#(lf)[9]", "Area"}, {"Currency#(lf)[3]", "Currency"}})
+		in
+		    #"Renamed Columns"
+	lineageTag: d95391d6-9cd9-42c1-8770-9eb4d9129ba5
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression Asia =
+		let
+		    Source = Web.BrowserContents("https://simple.wikipedia.org/wiki/List_of_countries_by_continents"),
+		    #"Extracted Table From Html" = Html.Table(Source, {{"Column1", "TABLE[id='mwBYU'] > * > TR > :nth-child(1)"}, {"Column2", "TABLE[id='mwBYU'] > * > TR > :nth-child(2)"}, {"Column3", "TABLE[id='mwBYU'] > * > TR > :nth-child(3)"}, {"Column4", "TABLE[id='mwBYU'] > * > TR > :nth-child(4)"}, {"Column5", "TABLE[id='mwBYU'] > * > TR > :nth-child(5)"}, {"Column6", "TABLE[id='mwBYU'] > * > TR > :nth-child(6)"}, {"Column7", "TABLE[id='mwBYU'] > * > TR > :nth-child(7)"}}, [RowSelector="TABLE[id='mwBYU'] > * > TR"]),
+		    #"Promoted Headers" = Table.PromoteHeaders(#"Extracted Table From Html", [PromoteAllScalars=true]),
+		    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"", Int64.Type}, {"Flag", type text}, {"English Name#(lf)[4][10][11][12]", type text}, {"Capital City / Capital Cities#(lf)[12][13][14]", type text}, {"Population 2021#(lf)[7][8]", Int64.Type}, {"Area[a][b]#(lf)[9]", type text}, {"Map", type text}}),
+		    #"Added Custom" = Table.AddColumn(#"Changed Type", "Continent", each "Asia"),
+		    #"Removed Columns" = Table.RemoveColumns(#"Added Custom",{"Flag", "Map"}),
+		    #"Renamed Columns" = Table.RenameColumns(#"Removed Columns",{{"English Name#(lf)[4][10][11][12]", "CountryName"}, {"Capital City / Capital Cities#(lf)[12][13][14]", "Capital City / Capital Cities"}, {"Population 2021#(lf)[7][8]", "Population"}, {"Area[a][b]#(lf)[9]", "Area"}}),
+		    #"Added Custom1" = Table.AddColumn(#"Renamed Columns", "Currency", each null),
+		    #"Reordered Columns" = Table.ReorderColumns(#"Added Custom1",{"", "CountryName", "Capital City / Capital Cities", "Population", "Area", "Currency", "Continent"})
+		in
+		    #"Reordered Columns"
+	lineageTag: 0f4f3075-11d2-4daf-8709-1242488cd6dc
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression Europe =
+		let
+		    Source = Web.BrowserContents("https://simple.wikipedia.org/wiki/List_of_countries_by_continents"),
+		    #"Extracted Table From Html" = Html.Table(Source, {{"Column1", "TABLE[id='mwCVc'] > * > TR > :nth-child(1)"}, {"Column2", "TABLE[id='mwCVc'] > * > TR > :nth-child(2)"}, {"Column3", "TABLE[id='mwCVc'] > * > TR > :nth-child(3)"}, {"Column4", "TABLE[id='mwCVc'] > * > TR > :nth-child(4)"}, {"Column5", "TABLE[id='mwCVc'] > * > TR > :nth-child(5)"}, {"Column6", "TABLE[id='mwCVc'] > * > TR > :nth-child(6)"}, {"Column7", "TABLE[id='mwCVc'] > * > TR > :nth-child(7)"}, {"Column8", "TABLE[id='mwCVc'] > * > TR > :nth-child(8)"}}, [RowSelector="TABLE[id='mwCVc'] > * > TR"]),
+		    #"Promoted Headers" = Table.PromoteHeaders(#"Extracted Table From Html", [PromoteAllScalars=true]),
+		    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"", Int64.Type}, {"Flag", type text}, {"English Name", type text}, {"Capital City / Capital Cities", type text}, {"Population 2021#(lf)[7][8]", type text}, {"Area[a][b]#(lf)[9]", type text}, {"Currency#(lf)[12]", type text}, {"Map", type text}}),
+		    #"Added Custom" = Table.AddColumn(#"Changed Type", "Continent", each "Europe"),
+		    #"Removed Columns" = Table.RemoveColumns(#"Added Custom",{"Flag", "Map"}),
+		    #"Renamed Columns" = Table.RenameColumns(#"Removed Columns",{{"Population 2021#(lf)[7][8]", "Population"}, {"Area[a][b]#(lf)[9]", "Area"}, {"Currency#(lf)[12]", "Currency"}, {"English Name", "CountryName"}})
+		in
+		    #"Renamed Columns"
+	lineageTag: 0377f8dc-6769-4977-b6a9-7e409f263b46
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression 'North America' =
+		let
+		    Source = Web.BrowserContents("https://simple.wikipedia.org/wiki/List_of_countries_by_continents"),
+		    #"Extracted Table From Html" = Html.Table(Source, {{"Column1", "TABLE[id='mwDY0'] > * > TR > :nth-child(1)"}, {"Column2", "TABLE[id='mwDY0'] > * > TR > :nth-child(2)"}, {"Column3", "TABLE[id='mwDY0'] > * > TR > :nth-child(3)"}, {"Column4", "TABLE[id='mwDY0'] > * > TR > :nth-child(4)"}, {"Column5", "TABLE[id='mwDY0'] > * > TR > :nth-child(5)"}, {"Column6", "TABLE[id='mwDY0'] > * > TR > :nth-child(6)"}, {"Column7", "TABLE[id='mwDY0'] > * > TR > :nth-child(7)"}, {"Column8", "TABLE[id='mwDY0'] > * > TR > :nth-child(8)"}}, [RowSelector="TABLE[id='mwDY0'] > * > TR"]),
+		    #"Promoted Headers" = Table.PromoteHeaders(#"Extracted Table From Html", [PromoteAllScalars=true]),
+		    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"", Int64.Type}, {"Flag", type text}, {"English Name#(lf)[4][12][19][20]", type text}, {"Capital City / Capital Cities#(lf)[12][14][21]", type text}, {"Population 2021#(lf)[7][8]", Int64.Type}, {"Area[a][b]#(lf)[9]", type text}, {"Currency#(lf)[12]", type text}, {"Map", type text}}),
+		    #"Added Custom" = Table.AddColumn(#"Changed Type", "Continent", each "South America"),
+		    #"Removed Columns" = Table.RemoveColumns(#"Added Custom",{"Flag", "Map", "Continent"}),
+		    #"Added Custom1" = Table.AddColumn(#"Removed Columns", "Continent", each "North America"),
+		    #"Renamed Columns" = Table.RenameColumns(#"Added Custom1",{{"English Name#(lf)[4][12][19][20]", "CountryName"}, {"Capital City / Capital Cities#(lf)[12][14][21]", "Capital City / Capital Cities"}, {"Population 2021#(lf)[7][8]", "Population"}, {"Area[a][b]#(lf)[9]", "Area"}, {"Currency#(lf)[12]", "Currency"}})
+		in
+		    #"Renamed Columns"
+	lineageTag: 9d3a8b35-fb13-4cd8-9e98-30ef5daebe17
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression 'South America' =
+		let
+		    Source = Web.BrowserContents("https://simple.wikipedia.org/wiki/List_of_countries_by_continents"),
+		    #"Extracted Table From Html" = Html.Table(Source, {{"Column1", "TABLE[id='mwD-A'] > * > TR > :nth-child(1)"}, {"Column2", "TABLE[id='mwD-A'] > * > TR > :nth-child(2)"}, {"Column3", "TABLE[id='mwD-A'] > * > TR > :nth-child(3)"}, {"Column4", "TABLE[id='mwD-A'] > * > TR > :nth-child(4)"}, {"Column5", "TABLE[id='mwD-A'] > * > TR > :nth-child(5)"}, {"Column6", "TABLE[id='mwD-A'] > * > TR > :nth-child(6)"}, {"Column7", "TABLE[id='mwD-A'] > * > TR > :nth-child(7)"}, {"Column8", "TABLE[id='mwD-A'] > * > TR > :nth-child(8)"}, {"Column9", "TABLE[id='mwD-A'] > * > TR > :nth-child(9)"}}, [RowSelector="TABLE[id='mwD-A'] > * > TR"]),
+		    #"Promoted Headers" = Table.PromoteHeaders(#"Extracted Table From Html", [PromoteAllScalars=true]),
+		    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"", Int64.Type}, {"Flag", type text}, {"English Name", type text}, {"Capital City / Capital Cities", type text}, {"Population 2021#(lf)[7][8]", Int64.Type}, {"Area[a][b][9]", type text}, {"Official languages", type text}, {"Currency", type text}, {"Map", type text}}),
+		    #"Added Custom" = Table.AddColumn(#"Changed Type", "Continent", each "North America"),
+		    #"Removed Columns" = Table.RemoveColumns(#"Added Custom",{"Flag", "Map", "Continent"}),
+		    #"Added Custom1" = Table.AddColumn(#"Removed Columns", "Continent", each "South America"),
+		    #"Renamed Columns" = Table.RenameColumns(#"Added Custom1",{{"Population 2021#(lf)[7][8]", "Population"}, {"Area[a][b][9]", "Area"}, {"English Name", "CountryName"}}),
+		    #"Removed Columns1" = Table.RemoveColumns(#"Renamed Columns",{"Official languages"})
+		in
+		    #"Removed Columns1"
+	lineageTag: 1b246a1d-9f91-458c-9463-5acbf37f4d53
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression Oceania =
+		let
+		    Source = Web.BrowserContents("https://simple.wikipedia.org/wiki/List_of_countries_by_continents"),
+		    #"Extracted Table From Html" = Html.Table(Source, {{"Column1", "TABLE[id='mwEQc'] > * > TR > :nth-child(1)"}, {"Column2", "TABLE[id='mwEQc'] > * > TR > :nth-child(2)"}, {"Column3", "TABLE[id='mwEQc'] > * > TR > :nth-child(3)"}, {"Column4", "TABLE[id='mwEQc'] > * > TR > :nth-child(4)"}, {"Column5", "TABLE[id='mwEQc'] > * > TR > :nth-child(5)"}, {"Column6", "TABLE[id='mwEQc'] > * > TR > :nth-child(6)"}, {"Column7", "TABLE[id='mwEQc'] > * > TR > :nth-child(7)"}, {"Column8", "TABLE[id='mwEQc'] > * > TR > :nth-child(8)"}, {"Column9", "TABLE[id='mwEQc'] > * > TR > :nth-child(9)"}}, [RowSelector="TABLE[id='mwEQc'] > * > TR"]),
+		    #"Promoted Headers" = Table.PromoteHeaders(#"Extracted Table From Html", [PromoteAllScalars=true]),
+		    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"", Int64.Type}, {"Flag", type text}, {"English Name", type text}, {"Capital City / Capital Cities", type text}, {"Population 2021#(lf)[7][8]", Int64.Type}, {"Area[a][b]#(lf)[9]", type text}, {"Official languages", type text}, {"Currency", type text}, {"Map", type text}}),
+		    #"Removed Columns" = Table.RemoveColumns(#"Changed Type",{"Flag", "Map"}),
+		    #"Renamed Columns" = Table.RenameColumns(#"Removed Columns",{{"Population 2021#(lf)[7][8]", "Population"}, {"Area[a][b]#(lf)[9]", "Area"}}),
+		    #"Removed Columns1" = Table.RemoveColumns(#"Renamed Columns",{"Official languages"}),
+		    #"Added Custom" = Table.AddColumn(#"Removed Columns1", "Continent", each "Oceania"),
+		    #"Renamed Columns1" = Table.RenameColumns(#"Added Custom",{{"English Name", "CountryName"}})
+		in
+		    #"Renamed Columns1"
+	lineageTag: de797fbd-9579-4071-bc0b-394b115baedd
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

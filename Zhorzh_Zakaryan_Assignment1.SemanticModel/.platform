@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "Zhorzh_Zakaryan_Assignment1"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "b08b3767-53db-4754-8698-5cbc8d1442d9"
+  }
+}

@@ -1,0 +1,48 @@
+table DimSalesChannels
+	lineageTag: 010a822f-f4af-4041-8780-9ef71bce5c88
+
+	column channel_id_pk_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: 59d69787-5abf-46d0-b712-bdde8925472c
+		summarizeBy: none
+		sourceColumn: channel_id_pk_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	column channel_id_nk
+		dataType: int64
+		formatString: 0
+		lineageTag: 88bb256b-2a24-4e38-a3aa-6fc28cd9505e
+		summarizeBy: none
+		sourceColumn: channel_id_nk
+
+		annotation SummarizationSetBy = Automatic
+
+	column ChannelName
+		dataType: string
+		lineageTag: f0c1ea2a-4672-48a5-9529-eff5f2f349bc
+		summarizeBy: none
+		sourceColumn: ChannelName
+
+		annotation SummarizationSetBy = Automatic
+
+	partition DimSalesChannels = m
+		mode: import
+		source =
+				let
+				    Source = Json.Document(File.Contents(FolderPathParam & "RawData\sales_channels.json")),
+				    #"Converted to Table" = Table.FromList(Source, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
+				    #"Expanded Column1" = Table.ExpandRecordColumn(#"Converted to Table", "Column1", {"channel_id_pk", "ChannelName"}, {"channel_id_pk", "ChannelName"}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Expanded Column1",{{"channel_id_pk", Int64.Type}, {"ChannelName", type text}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"channel_id_pk", "channel_id_nk"}}),
+				    #"Added Index" = Table.AddIndexColumn(#"Renamed Columns", "Index", 1, 1, Int64.Type),
+				    #"Reordered Columns" = Table.ReorderColumns(#"Added Index",{"Index", "channel_id_nk", "ChannelName"}),
+				    #"Renamed Columns1" = Table.RenameColumns(#"Reordered Columns",{{"Index", "channel_id_pk_sk"}})
+				in
+				    #"Renamed Columns1"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "Zhorzh_Zakaryan_Assignment1"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "9a037f35-41d6-46e2-a823-c45880dd1073"
+  }
+}

@@ -1,0 +1,552 @@
+{
+  "version": "1.0",
+  "conceptualSchemaSettings": {},
+  "queries": [
+    {
+      "name": "FactSalesTransactions",
+      "lineageTag": "3f208ea5-382d-421a-a782-fae4f85dcf27",
+      "navigationStepName": "Navigation",
+      "text": [
+        "let",
+        "    Source = Folder.Files(\"C:\\Users\\DELL\\Desktop\\RawData_PowerBI_ACA_Assignment1\\ecommerce_sales_transactions\"),",
+        "    #\"Filtered Hidden Files1\" = Table.SelectRows(Source, each [Attributes]?[Hidden]? <> true),",
+        "    #\"Invoke Custom Function1\" = Table.AddColumn(#\"Filtered Hidden Files1\", \"Transform File (2)\", each #\"Transform File (2)\"([Content])),",
+        "    #\"Renamed Columns1\" = Table.RenameColumns(#\"Invoke Custom Function1\", {\"Name\", \"Source.Name\"}),",
+        "    #\"Removed Other Columns1\" = Table.SelectColumns(#\"Renamed Columns1\", {\"Source.Name\", \"Transform File (2)\"}),",
+        "    #\"Expanded Table Column1\" = Table.ExpandTableColumn(#\"Removed Other Columns1\", \"Transform File (2)\", Table.ColumnNames(#\"Transform File (2)\"(#\"Sample File (2)\"))),",
+        "    #\"Changed Type\" = Table.TransformColumnTypes(#\"Expanded Table Column1\",{{\"Source.Name\", type text}, {\"TransactionID\", type text}, {\"TransactionDate\", type datetime}, {\"CustomerID\", Int64.Type}, {\"ProductID\", Int64.Type}, {\"SalesChannelID\", Int64.Type}, {\"Quantity\", Int64.Type}, {\"UnitPriceAtSale_LocalCurrency\", type number}, {\"TotalRevenue_LocalCurrency\", type number}, {\"Currency\", type text}, {\"DiscountAmount_Local\", type number}, {\"ShippingCost_Local\", type number}, {\"PaymentMethod\", type text}, {\"CountryName\", type text}}),",
+        "    #\"Renamed Columns\" = Table.RenameColumns(#\"Changed Type\",{{\"TransactionID\", \"transaction_is_nk\"}}),",
+        "    #\"Added Index\" = Table.AddIndexColumn(#\"Renamed Columns\", \"Index\", 1, 1, Int64.Type),",
+        "    #\"Reordered Columns\" = Table.ReorderColumns(#\"Added Index\",{\"Index\", \"Source.Name\", \"transaction_is_nk\", \"TransactionDate\", \"CustomerID\", \"ProductID\", \"SalesChannelID\", \"Quantity\", \"UnitPriceAtSale_LocalCurrency\", \"TotalRevenue_LocalCurrency\", \"Currency\", \"DiscountAmount_Local\", \"ShippingCost_Local\", \"PaymentMethod\", \"CountryName\"}),",
+        "    #\"Renamed Columns2\" = Table.RenameColumns(#\"Reordered Columns\",{{\"Index\", \"transaction_id_pk_sk\"}}),",
+        "    #\"Merged Queries\" = Table.NestedJoin(#\"Renamed Columns2\", {\"ProductID\"}, DimProducts, {\"product_id_nk\"}, \"DimProducts\", JoinKind.LeftOuter),",
+        "    #\"Removed Columns\" = Table.RemoveColumns(#\"Merged Queries\",{\"ProductID\"}),",
+        "    #\"Merged Queries1\" = Table.NestedJoin(#\"Removed Columns\", {\"CustomerID\"}, DimCountries, {\"country_id_pk_sk\"}, \"DimCountries\", JoinKind.LeftOuter),",
+        "    #\"Renamed Columns3\" = Table.RenameColumns(#\"Merged Queries1\",{{\"DimProducts\", \"product_id_fk_sk\"}, {\"DimCountries\", \"customer_id_fk_sk\"}}),",
+        "    #\"Merged Queries2\" = Table.NestedJoin(#\"Renamed Columns3\", {\"SalesChannelID\"}, DimSalesChannels, {\"channel_id_pk_sk\"}, \"DimSalesChannels\", JoinKind.LeftOuter),",
+        "    #\"Renamed Columns4\" = Table.RenameColumns(#\"Merged Queries2\",{{\"DimSalesChannels\", \"channel_id_fk_sk\"}}),",
+        "    #\"Removed Columns1\" = Table.RemoveColumns(#\"Renamed Columns4\",{\"CustomerID\", \"SalesChannelID\"}),",
+        "    #\"Merged Queries3\" = Table.NestedJoin(#\"Removed Columns1\", {\"CountryName\"}, DimCountries, {\"CountryName\"}, \"DimCountries\", JoinKind.LeftOuter),",
+        "    #\"Renamed Columns5\" = Table.RenameColumns(#\"Merged Queries3\",{{\"DimCountries\", \"country_id_fk_sk\"}}),",
+        "    #\"Removed Columns2\" = Table.RemoveColumns(#\"Renamed Columns5\",{\"CountryName\"}),",
+        "    #\"Inserted Date\" = Table.AddColumn(#\"Removed Columns2\", \"Date\", each DateTime.Date([TransactionDate]), type date),",
+        "    #\"Renamed Columns6\" = Table.RenameColumns(#\"Inserted Date\",{{\"Date\", \"DateOnly\"}}),",
+        "    #\"Merged Queries4\" = Table.NestedJoin(#\"Renamed Columns6\", {\"DateOnly\"}, DimDate, {\"Date\"}, \"DimDate\", JoinKind.LeftOuter),",
+        "    #\"Renamed Columns7\" = Table.RenameColumns(#\"Merged Queries4\",{{\"DimDate\", \"date_id_fk_sk\"}}),",
+        "    #\"Removed Columns3\" = Table.RemoveColumns(#\"Renamed Columns7\",{\"DateOnly\"}),",
+        "    #\"Changed Type1\" = Table.TransformColumnTypes(#\"Removed Columns3\",{{\"TransactionDate\", type date}}),",
+        "    #\"Added Custom\" = Table.AddColumn(#\"Changed Type1\", \"exchange_rate_sk_fk\", each Date.ToText([TransactionDate], \"yyyyMMdd\") & \"_\" & [Currency] & \"USD\"),",
+        "    #\"Expanded product_id_fk_sk\" = Table.ExpandTableColumn(#\"Added Custom\", \"product_id_fk_sk\", {\"product_id_pk_sk\"}, {\"product_id_pk_sk\"}),",
+        "    #\"Renamed Columns8\" = Table.RenameColumns(#\"Expanded product_id_fk_sk\",{{\"product_id_pk_sk\", \"product_id_fk_sk\"}}),",
+        "    #\"Expanded customer_id_fk_sk\" = Table.ExpandTableColumn(#\"Renamed Columns8\", \"customer_id_fk_sk\", {\"country_id_pk_sk\"}, {\"country_id_pk_sk\"}),",
+        "    #\"Renamed Columns9\" = Table.RenameColumns(#\"Expanded customer_id_fk_sk\",{{\"country_id_pk_sk\", \"customer_id_fk_sk\"}}),",
+        "    #\"Expanded channel_id_fk_sk\" = Table.ExpandTableColumn(#\"Renamed Columns9\", \"channel_id_fk_sk\", {\"channel_id_pk_sk\"}, {\"channel_id_pk_sk\"}),",
+        "    #\"Renamed Columns10\" = Table.RenameColumns(#\"Expanded channel_id_fk_sk\",{{\"channel_id_pk_sk\", \"channel_id_fk_sk\"}}),",
+        "    #\"Expanded country_id_fk_sk\" = Table.ExpandTableColumn(#\"Renamed Columns10\", \"country_id_fk_sk\", {\"country_id_pk_sk\"}, {\"country_id_pk_sk\"}),",
+        "    #\"Renamed Columns11\" = Table.RenameColumns(#\"Expanded country_id_fk_sk\",{{\"country_id_pk_sk\", \"country_id_fk_sk\"}}),",
+        "    #\"Expanded date_id_fk_sk\" = Table.ExpandTableColumn(#\"Renamed Columns11\", \"date_id_fk_sk\", {\"date_id_pk_sk\"}, {\"date_id_pk_sk\"}),",
+        "    #\"Renamed Columns12\" = Table.RenameColumns(#\"Expanded date_id_fk_sk\",{{\"date_id_pk_sk\", \"date_id_fk_sk\"}})",
+        "in",
+        "    #\"Renamed Columns12\""
+      ],
+      "isDirectQuery": false,
+      "lastLoadedAsTableFormulaText": "{\"IncludesReferencedQueries\":false,\"RootFormulaText\":\"let\\n    Source = Folder.Files(\\\"C:\\\\Users\\\\DELL\\\\Desktop\\\\RawData_PowerBI_ACA_Assignment1\\\\ecommerce_sales_transactions\\\"),\\n    #\\\"Filtered Hidden Files1\\\" = Table.SelectRows(Source, each [Attributes]?[Hidden]? <> true),\\n    #\\\"Invoke Custom Function1\\\" = Table.AddColumn(#\\\"Filtered Hidden Files1\\\", \\\"Transform File (2)\\\", each #\\\"Transform File (2)\\\"([Content])),\\n    #\\\"Renamed Columns1\\\" = Table.RenameColumns(#\\\"Invoke Custom Function1\\\", {\\\"Name\\\", \\\"Source.Name\\\"}),\\n    #\\\"Removed Other Columns1\\\" = Table.SelectColumns(#\\\"Renamed Columns1\\\", {\\\"Source.Name\\\", \\\"Transform File (2)\\\"}),\\n    #\\\"Expanded Table Column1\\\" = Table.ExpandTableColumn(#\\\"Removed Other Columns1\\\", \\\"Transform File (2)\\\", Table.ColumnNames(#\\\"Transform File (2)\\\"(#\\\"Sample File (2)\\\"))),\\n    #\\\"Changed Type\\\" = Table.TransformColumnTypes(#\\\"Expanded Table Column1\\\",{{\\\"Source.Name\\\", type text}, {\\\"TransactionID\\\", type text}, {\\\"TransactionDate\\\", type datetime}, {\\\"CustomerID\\\", Int64.Type}, {\\\"ProductID\\\", Int64.Type}, {\\\"SalesChannelID\\\", Int64.Type}, {\\\"Quantity\\\", Int64.Type}, {\\\"UnitPriceAtSale_LocalCurrency\\\", type number}, {\\\"TotalRevenue_LocalCurrency\\\", type number}, {\\\"Currency\\\", type text}, {\\\"DiscountAmount_Local\\\", type number}, {\\\"ShippingCost_Local\\\", type number}, {\\\"PaymentMethod\\\", type text}, {\\\"CountryName\\\", type text}}),\\n    #\\\"Renamed Columns\\\" = Table.RenameColumns(#\\\"Changed Type\\\",{{\\\"TransactionID\\\", \\\"transaction_is_nk\\\"}}),\\n    #\\\"Added Index\\\" = Table.AddIndexColumn(#\\\"Renamed Columns\\\", \\\"Index\\\", 1, 1, Int64.Type),\\n    #\\\"Reordered Columns\\\" = Table.ReorderColumns(#\\\"Added Index\\\",{\\\"Index\\\", \\\"Source.Name\\\", \\\"transaction_is_nk\\\", \\\"TransactionDate\\\", \\\"CustomerID\\\", \\\"ProductID\\\", \\\"SalesChannelID\\\", \\\"Quantity\\\", \\\"UnitPriceAtSale_LocalCurrency\\\", \\\"TotalRevenue_LocalCurrency\\\", \\\"Currency\\\", \\\"DiscountAmount_Local\\\", \\\"ShippingCost_Local\\\", \\\"PaymentMethod\\\", \\\"CountryName\\\"}),\\n    #\\\"Renamed Columns2\\\" = Table.RenameColumns(#\\\"Reordered Columns\\\",{{\\\"Index\\\", \\\"transaction_id_pk_sk\\\"}}),\\n    #\\\"Merged Queries\\\" = Table.NestedJoin(#\\\"Renamed Columns2\\\", {\\\"ProductID\\\"}, DimProducts, {\\\"product_id_nk\\\"}, \\\"DimProducts\\\", JoinKind.LeftOuter),\\n    #\\\"Removed Columns\\\" = Table.RemoveColumns(#\\\"Merged Queries\\\",{\\\"ProductID\\\"}),\\n    #\\\"Merged Queries1\\\" = Table.NestedJoin(#\\\"Removed Columns\\\", {\\\"CustomerID\\\"}, DimCountries, {\\\"country_id_pk_sk\\\"}, \\\"DimCountries\\\", JoinKind.LeftOuter),\\n    #\\\"Renamed Columns3\\\" = Table.RenameColumns(#\\\"Merged Queries1\\\",{{\\\"DimProducts\\\", \\\"product_id_fk_sk\\\"}, {\\\"DimCountries\\\", \\\"customer_id_fk_sk\\\"}}),\\n    #\\\"Merged Queries2\\\" = Table.NestedJoin(#\\\"Renamed Columns3\\\", {\\\"SalesChannelID\\\"}, DimSalesChannels, {\\\"channel_id_pk_sk\\\"}, \\\"DimSalesChannels\\\", JoinKind.LeftOuter),\\n    #\\\"Renamed Columns4\\\" = Table.RenameColumns(#\\\"Merged Queries2\\\",{{\\\"DimSalesChannels\\\", \\\"channel_id_fk_sk\\\"}}),\\n    #\\\"Removed Columns1\\\" = Table.RemoveColumns(#\\\"Renamed Columns4\\\",{\\\"CustomerID\\\", \\\"SalesChannelID\\\"}),\\n    #\\\"Merged Queries3\\\" = Table.NestedJoin(#\\\"Removed Columns1\\\", {\\\"CountryName\\\"}, DimCountries, {\\\"CountryName\\\"}, \\\"DimCountries\\\", JoinKind.LeftOuter),\\n    #\\\"Renamed Columns5\\\" = Table.RenameColumns(#\\\"Merged Queries3\\\",{{\\\"DimCountries\\\", \\\"country_id_fk_sk\\\"}}),\\n    #\\\"Removed Columns2\\\" = Table.RemoveColumns(#\\\"Renamed Columns5\\\",{\\\"CountryName\\\"}),\\n    #\\\"Inserted Date\\\" = Table.AddColumn(#\\\"Removed Columns2\\\", \\\"Date\\\", each DateTime.Date([TransactionDate]), type date),\\n    #\\\"Renamed Columns6\\\" = Table.RenameColumns(#\\\"Inserted Date\\\",{{\\\"Date\\\", \\\"DateOnly\\\"}}),\\n    #\\\"Merged Queries4\\\" = Table.NestedJoin(#\\\"Renamed Columns6\\\", {\\\"DateOnly\\\"}, DimDate, {\\\"Date\\\"}, \\\"DimDate\\\", JoinKind.LeftOuter),\\n    #\\\"Renamed Columns7\\\" = Table.RenameColumns(#\\\"Merged Queries4\\\",{{\\\"DimDate\\\", \\\"date_id_fk_sk\\\"}}),\\n    #\\\"Removed Columns3\\\" = Table.RemoveColumns(#\\\"Renamed Columns7\\\",{\\\"DateOnly\\\"}),\\n    #\\\"Changed Type1\\\" = Table.TransformColumnTypes(#\\\"Removed Columns3\\\",{{\\\"TransactionDate\\\", type date}}),\\n    #\\\"Added Custom\\\" = Table.AddColumn(#\\\"Changed Type1\\\", \\\"exchange_rate_sk_fk\\\", each Date.ToText([TransactionDate], \\\"yyyyMMdd\\\") & \\\"_\\\" & [Currency] & \\\"USD\\\"),\\n    #\\\"Expanded product_id_fk_sk\\\" = Table.ExpandTableColumn(#\\\"Added Custom\\\", \\\"product_id_fk_sk\\\", {\\\"product_id_pk_sk\\\"}, {\\\"product_id_pk_sk\\\"}),\\n    #\\\"Renamed Columns8\\\" = Table.RenameColumns(#\\\"Expanded product_id_fk_sk\\\",{{\\\"product_id_pk_sk\\\", \\\"product_id_fk_sk\\\"}}),\\n    #\\\"Expanded customer_id_fk_sk\\\" = Table.ExpandTableColumn(#\\\"Renamed Columns8\\\", \\\"customer_id_fk_sk\\\", {\\\"country_id_pk_sk\\\"}, {\\\"country_id_pk_sk\\\"}),\\n    #\\\"Renamed Columns9\\\" = Table.RenameColumns(#\\\"Expanded customer_id_fk_sk\\\",{{\\\"country_id_pk_sk\\\", \\\"customer_id_fk_sk\\\"}}),\\n    #\\\"Expanded channel_id_fk_sk\\\" = Table.ExpandTableColumn(#\\\"Renamed Columns9\\\", \\\"channel_id_fk_sk\\\", {\\\"channel_id_pk_sk\\\"}, {\\\"channel_id_pk_sk\\\"}),\\n    #\\\"Renamed Columns10\\\" = Table.RenameColumns(#\\\"Expanded channel_id_fk_sk\\\",{{\\\"channel_id_pk_sk\\\", \\\"channel_id_fk_sk\\\"}}),\\n    #\\\"Expanded country_id_fk_sk\\\" = Table.ExpandTableColumn(#\\\"Renamed Columns10\\\", \\\"country_id_fk_sk\\\", {\\\"country_id_pk_sk\\\"}, {\\\"country_id_pk_sk\\\"}),\\n    #\\\"Renamed Columns11\\\" = Table.RenameColumns(#\\\"Expanded country_id_fk_sk\\\",{{\\\"country_id_pk_sk\\\", \\\"country_id_fk_sk\\\"}}),\\n    #\\\"Expanded date_id_fk_sk\\\" = Table.ExpandTableColumn(#\\\"Renamed Columns11\\\", \\\"date_id_fk_sk\\\", {\\\"date_id_pk_sk\\\"}, {\\\"date_id_pk_sk\\\"}),\\n    #\\\"Renamed Columns12\\\" = Table.RenameColumns(#\\\"Expanded date_id_fk_sk\\\",{{\\\"date_id_pk_sk\\\", \\\"date_id_fk_sk\\\"}})\\nin\\n    #\\\"Renamed Columns12\\\"\",\"ReferencedQueriesFormulaText\":{}}",
+      "loadAsTableDisabled": false,
+      "resultType": "Table",
+      "isHidden": false
+    },
+    {
+      "name": "ProductCategories",
+      "lineageTag": "8a1ad5b5-291c-4c42-bc25-43c0078a02c8",
+      "navigationStepName": "Navigation",
+      "text": [
+        "let",
+        "    Source = Excel.Workbook(File.Contents(\"C:\\Users\\DELL\\Desktop\\ACA_PowerBI_Assignment1\\RawData\\ecommerce_products.xlsx\"), null, true),",
+        "    ProductCategories_Sheet = Source{[Item=\"ProductCategories\",Kind=\"Sheet\"]}[Data],",
+        "    #\"Promoted Headers\" = Table.PromoteHeaders(ProductCategories_Sheet, [PromoteAllScalars=true])",
+        "in",
+        "    #\"Promoted Headers\""
+      ],
+      "loadAsTableDisabled": true,
+      "resultType": "Table",
+      "isHidden": false
+    },
+    {
+      "name": "ProductSubCategories",
+      "lineageTag": "996ec1a5-462d-499a-9c1a-8c1cda3c8058",
+      "navigationStepName": "Navigation",
+      "text": [
+        "let",
+        "    Source = Excel.Workbook(File.Contents(\"C:\\Users\\DELL\\Desktop\\ACA_PowerBI_Assignment1\\RawData\\ecommerce_products.xlsx\"), null, true),",
+        "    ProductSubCategories_Sheet = Source{[Item=\"ProductSubCategories\",Kind=\"Sheet\"]}[Data],",
+        "    #\"Promoted Headers\" = Table.PromoteHeaders(ProductSubCategories_Sheet, [PromoteAllScalars=true])",
+        "in",
+        "    #\"Promoted Headers\""
+      ],
+      "loadAsTableDisabled": true,
+      "resultType": "Table",
+      "isHidden": false
+    },
+    {
+      "name": "DimProducts",
+      "lineageTag": "16024411-82e0-4d53-87ec-9c287a271114",
+      "navigationStepName": "Navigation",
+      "text": [
+        "let",
+        "    Source = Excel.Workbook(File.Contents(\"C:\\Users\\DELL\\Desktop\\ACA_PowerBI_Assignment1\\RawData\\ecommerce_products.xlsx\"), null, true),",
+        "    Products_Sheet = Source{[Item=\"Products\",Kind=\"Sheet\"]}[Data],",
+        "    #\"Promoted Headers\" = Table.PromoteHeaders(Products_Sheet, [PromoteAllScalars=true]),",
+        "    #\"Merged Queries\" = Table.NestedJoin(#\"Promoted Headers\", {\"product_category_id_fk\"}, ProductCategories, {\"product_category_id_pk\"}, \"ProductCategories\", JoinKind.LeftOuter),",
+        "    #\"Expanded ProductCategories\" = Table.ExpandTableColumn(#\"Merged Queries\", \"ProductCategories\", {\"CategoryName\"}, {\"ProductCategories.CategoryName\"}),",
+        "    #\"Merged Queries1\" = Table.NestedJoin(#\"Expanded ProductCategories\", {\"product_subcategory_id_fk\"}, ProductSubCategories, {\"product_subcategory_id_pk\"}, \"ProductSubCategories\", JoinKind.LeftOuter),",
+        "    #\"Expanded ProductSubCategories\" = Table.ExpandTableColumn(#\"Merged Queries1\", \"ProductSubCategories\", {\"SubCategoryName\"}, {\"SubCategoryName\"}),",
+        "    #\"Split Column by Delimiter\" = Table.SplitColumn(#\"Expanded ProductSubCategories\", \"BasePriceWithCurrency\", Splitter.SplitTextByEachDelimiter({\" \"}, QuoteStyle.Csv, false), {\"BasePriceWithCurrency.1\", \"BasePriceWithCurrency.2\"}),",
+        "    #\"Changed Type\" = Table.TransformColumnTypes(#\"Split Column by Delimiter\",{{\"BasePriceWithCurrency.1\", type number}, {\"BasePriceWithCurrency.2\", type text}}),",
+        "    #\"Renamed Columns\" = Table.RenameColumns(#\"Changed Type\",{{\"BasePriceWithCurrency.1\", \"BasePrice\"}, {\"BasePriceWithCurrency.2\", \"Currency\"}}),",
+        "    #\"Changed Type1\" = Table.TransformColumnTypes(#\"Renamed Columns\",{{\"BasePrice\", type number}}),",
+        "    #\"Removed Columns\" = Table.RemoveColumns(#\"Changed Type1\",{\"product_category_id_fk\", \"product_subcategory_id_fk\"}),",
+        "    #\"Renamed Columns1\" = Table.RenameColumns(#\"Removed Columns\",{{\"product_id_pk\", \"product_id_nk\"}}),",
+        "    #\"Added Index\" = Table.AddIndexColumn(#\"Renamed Columns1\", \"Index\", 0, 1, Int64.Type),",
+        "    #\"Reordered Columns\" = Table.ReorderColumns(#\"Added Index\",{\"Index\", \"product_id_nk\", \"ProductName\", \"Brand\", \"Description\", \"BasePrice\", \"Currency\", \"Weight_kg\", \"LaunchDate\", \"IsActive\", \"ProductCategories.CategoryName\", \"SubCategoryName\"}),",
+        "    #\"Renamed Columns2\" = Table.RenameColumns(#\"Reordered Columns\",{{\"Index\", \"product_id_pk_sk\"}}),",
+        "    #\"Removed Columns1\" = Table.RemoveColumns(#\"Renamed Columns2\",{\"product_id_pk_sk\"}),",
+        "    #\"Added Index1\" = Table.AddIndexColumn(#\"Removed Columns1\", \"Index\", 0, 1, Int64.Type),",
+        "    #\"Removed Columns2\" = Table.RemoveColumns(#\"Added Index1\",{\"Index\"}),",
+        "    #\"Added Index2\" = Table.AddIndexColumn(#\"Removed Columns2\", \"Index\", 1, 1, Int64.Type),",
+        "    #\"Renamed Columns3\" = Table.RenameColumns(#\"Added Index2\",{{\"Index\", \"product_id_pk_sk\"}}),",
+        "    #\"Reordered Columns1\" = Table.ReorderColumns(#\"Renamed Columns3\",{\"product_id_pk_sk\", \"product_id_nk\", \"ProductName\", \"Brand\", \"Description\", \"BasePrice\", \"Currency\", \"Weight_kg\", \"LaunchDate\", \"IsActive\", \"ProductCategories.CategoryName\", \"SubCategoryName\"}),",
+        "    #\"Changed Type2\" = Table.TransformColumnTypes(#\"Reordered Columns1\",{{\"product_id_nk\", Int64.Type}, {\"Weight_kg\", type number}, {\"LaunchDate\", type date}, {\"IsActive\", type logical}, {\"ProductName\", type text}, {\"Brand\", type text}, {\"Description\", type text}, {\"SubCategoryName\", type text}, {\"ProductCategories.CategoryName\", type text}}),",
+        "    #\"Renamed Columns4\" = Table.RenameColumns(#\"Changed Type2\",{{\"ProductCategories.CategoryName\", \"ProductCategories\"}, {\"SubCategoryName\", \"CategoryName\"}})",
+        "in",
+        "    #\"Renamed Columns4\""
+      ],
+      "isDirectQuery": false,
+      "lastLoadedAsTableFormulaText": "{\"IncludesReferencedQueries\":false,\"RootFormulaText\":\"let\\n    Source = Excel.Workbook(File.Contents(\\\"C:\\\\Users\\\\DELL\\\\Desktop\\\\ACA_PowerBI_Assignment1\\\\RawData\\\\ecommerce_products.xlsx\\\"), null, true),\\n    Products_Sheet = Source{[Item=\\\"Products\\\",Kind=\\\"Sheet\\\"]}[Data],\\n    #\\\"Promoted Headers\\\" = Table.PromoteHeaders(Products_Sheet, [PromoteAllScalars=true]),\\n    #\\\"Merged Queries\\\" = Table.NestedJoin(#\\\"Promoted Headers\\\", {\\\"product_category_id_fk\\\"}, ProductCategories, {\\\"product_category_id_pk\\\"}, \\\"ProductCategories\\\", JoinKind.LeftOuter),\\n    #\\\"Expanded ProductCategories\\\" = Table.ExpandTableColumn(#\\\"Merged Queries\\\", \\\"ProductCategories\\\", {\\\"CategoryName\\\"}, {\\\"ProductCategories.CategoryName\\\"}),\\n    #\\\"Merged Queries1\\\" = Table.NestedJoin(#\\\"Expanded ProductCategories\\\", {\\\"product_subcategory_id_fk\\\"}, ProductSubCategories, {\\\"product_subcategory_id_pk\\\"}, \\\"ProductSubCategories\\\", JoinKind.LeftOuter),\\n    #\\\"Expanded ProductSubCategories\\\" = Table.ExpandTableColumn(#\\\"Merged Queries1\\\", \\\"ProductSubCategories\\\", {\\\"SubCategoryName\\\"}, {\\\"SubCategoryName\\\"}),\\n    #\\\"Split Column by Delimiter\\\" = Table.SplitColumn(#\\\"Expanded ProductSubCategories\\\", \\\"BasePriceWithCurrency\\\", Splitter.SplitTextByEachDelimiter({\\\" \\\"}, QuoteStyle.Csv, false), {\\\"BasePriceWithCurrency.1\\\", \\\"BasePriceWithCurrency.2\\\"}),\\n    #\\\"Changed Type\\\" = Table.TransformColumnTypes(#\\\"Split Column by Delimiter\\\",{{\\\"BasePriceWithCurrency.1\\\", type number}, {\\\"BasePriceWithCurrency.2\\\", type text}}),\\n    #\\\"Renamed Columns\\\" = Table.RenameColumns(#\\\"Changed Type\\\",{{\\\"BasePriceWithCurrency.1\\\", \\\"BasePrice\\\"}, {\\\"BasePriceWithCurrency.2\\\", \\\"Currency\\\"}}),\\n    #\\\"Changed Type1\\\" = Table.TransformColumnTypes(#\\\"Renamed Columns\\\",{{\\\"BasePrice\\\", type number}}),\\n    #\\\"Removed Columns\\\" = Table.RemoveColumns(#\\\"Changed Type1\\\",{\\\"product_category_id_fk\\\", \\\"product_subcategory_id_fk\\\"}),\\n    #\\\"Renamed Columns1\\\" = Table.RenameColumns(#\\\"Removed Columns\\\",{{\\\"product_id_pk\\\", \\\"product_id_nk\\\"}}),\\n    #\\\"Added Index\\\" = Table.AddIndexColumn(#\\\"Renamed Columns1\\\", \\\"Index\\\", 0, 1, Int64.Type),\\n    #\\\"Reordered Columns\\\" = Table.ReorderColumns(#\\\"Added Index\\\",{\\\"Index\\\", \\\"product_id_nk\\\", \\\"ProductName\\\", \\\"Brand\\\", \\\"Description\\\", \\\"BasePrice\\\", \\\"Currency\\\", \\\"Weight_kg\\\", \\\"LaunchDate\\\", \\\"IsActive\\\", \\\"ProductCategories.CategoryName\\\", \\\"SubCategoryName\\\"}),\\n    #\\\"Renamed Columns2\\\" = Table.RenameColumns(#\\\"Reordered Columns\\\",{{\\\"Index\\\", \\\"product_id_pk_sk\\\"}}),\\n    #\\\"Removed Columns1\\\" = Table.RemoveColumns(#\\\"Renamed Columns2\\\",{\\\"product_id_pk_sk\\\"}),\\n    #\\\"Added Index1\\\" = Table.AddIndexColumn(#\\\"Removed Columns1\\\", \\\"Index\\\", 0, 1, Int64.Type),\\n    #\\\"Removed Columns2\\\" = Table.RemoveColumns(#\\\"Added Index1\\\",{\\\"Index\\\"}),\\n    #\\\"Added Index2\\\" = Table.AddIndexColumn(#\\\"Removed Columns2\\\", \\\"Index\\\", 1, 1, Int64.Type),\\n    #\\\"Renamed Columns3\\\" = Table.RenameColumns(#\\\"Added Index2\\\",{{\\\"Index\\\", \\\"product_id_pk_sk\\\"}}),\\n    #\\\"Reordered Columns1\\\" = Table.ReorderColumns(#\\\"Renamed Columns3\\\",{\\\"product_id_pk_sk\\\", \\\"product_id_nk\\\", \\\"ProductName\\\", \\\"Brand\\\", \\\"Description\\\", \\\"BasePrice\\\", \\\"Currency\\\", \\\"Weight_kg\\\", \\\"LaunchDate\\\", \\\"IsActive\\\", \\\"ProductCategories.CategoryName\\\", \\\"SubCategoryName\\\"}),\\n    #\\\"Changed Type2\\\" = Table.TransformColumnTypes(#\\\"Reordered Columns1\\\",{{\\\"product_id_nk\\\", Int64.Type}, {\\\"Weight_kg\\\", type number}, {\\\"LaunchDate\\\", type date}, {\\\"IsActive\\\", type logical}, {\\\"ProductName\\\", type text}, {\\\"Brand\\\", type text}, {\\\"Description\\\", type text}, {\\\"SubCategoryName\\\", type text}, {\\\"ProductCategories.CategoryName\\\", type text}}),\\n    #\\\"Renamed Columns4\\\" = Table.RenameColumns(#\\\"Changed Type2\\\",{{\\\"ProductCategories.CategoryName\\\", \\\"ProductCategories\\\"}, {\\\"SubCategoryName\\\", \\\"CategoryName\\\"}})\\nin\\n    #\\\"Renamed Columns4\\\"\",\"ReferencedQueriesFormulaText\":{}}",
+      "loadAsTableDisabled": false,
+      "resultType": "Table",
+      "isHidden": false
+    },
+    {
+      "name": "DimCustomers",
+      "lineageTag": "94a56636-7958-48a6-b8d2-af30e0fc8d2d",
+      "navigationStepName": "Navigation",
+      "text": [
+        "let",
+        "    Source = Csv.Document(File.Contents(FolderPathParam & \"RawData\\ecommerce_customers.csv\"), [Delimiter=\",\", Columns=11, Encoding=65001, QuoteStyle=QuoteStyle.None]),",
+        "    #\"Promoted Headers\" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+        "    #\"Changed Type\" = Table.TransformColumnTypes(#\"Promoted Headers\",{{\"customer_id_pk\", Int64.Type}, {\"FirstName\", type text}, {\"LastName\", type text}, {\"Email\", type text}, {\"DateOfBirth\", type date}, {\"Gender\", type text}, {\"country_id_fk\", Int64.Type}, {\"CountryName\", type text}, {\"LoyaltyStatus\", type text}, {\"RegistrationDate\", type date}, {\"PreferredLanguage\", type text}}),",
+        "    #\"Renamed Columns\" = Table.RenameColumns(#\"Changed Type\",{{\"customer_id_pk\", \"customer_id_nk\"}}),",
+        "    #\"Added Index\" = Table.AddIndexColumn(#\"Renamed Columns\", \"Index\", 1, 1, Int64.Type),",
+        "    #\"Reordered Columns\" = Table.ReorderColumns(#\"Added Index\",{\"Index\", \"customer_id_nk\", \"FirstName\", \"LastName\", \"Email\", \"DateOfBirth\", \"Gender\", \"country_id_fk\", \"CountryName\", \"LoyaltyStatus\", \"RegistrationDate\", \"PreferredLanguage\"}),",
+        "    #\"Renamed Columns1\" = Table.RenameColumns(#\"Reordered Columns\",{{\"Index\", \"customer_id_pk_sk\"}}),",
+        "    #\"Removed Columns\" = Table.RemoveColumns(#\"Renamed Columns1\",{\"country_id_fk\"}),",
+        "    #\"Merged Queries\" = Table.NestedJoin(#\"Removed Columns\", {\"CountryName\"}, DimCountries, {\"CountryName\"}, \"DimCountries\", JoinKind.LeftOuter),",
+        "    #\"Expanded DimCountries\" = Table.ExpandTableColumn(#\"Merged Queries\", \"DimCountries\", {\"country_id_pk_sk\"}, {\"country_id_pk_sk\"}),",
+        "    #\"Renamed Columns2\" = Table.RenameColumns(#\"Expanded DimCountries\",{{\"country_id_pk_sk\", \"country_id_fk_sk\"}}),",
+        "    #\"Removed Columns1\" = Table.RemoveColumns(#\"Renamed Columns2\",{\"CountryName\"})",
+        "in",
+        "    #\"Removed Columns1\""
+      ],
+      "isDirectQuery": false,
+      "lastLoadedAsTableFormulaText": "{\"IncludesReferencedQueries\":false,\"RootFormulaText\":\"let\\n    Source = Csv.Document(File.Contents(FolderPathParam & \\\"RawData\\\\ecommerce_customers.csv\\\"), [Delimiter=\\\",\\\", Columns=11, Encoding=65001, QuoteStyle=QuoteStyle.None]),\\n    #\\\"Promoted Headers\\\" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),\\n    #\\\"Changed Type\\\" = Table.TransformColumnTypes(#\\\"Promoted Headers\\\",{{\\\"customer_id_pk\\\", Int64.Type}, {\\\"FirstName\\\", type text}, {\\\"LastName\\\", type text}, {\\\"Email\\\", type text}, {\\\"DateOfBirth\\\", type date}, {\\\"Gender\\\", type text}, {\\\"country_id_fk\\\", Int64.Type}, {\\\"CountryName\\\", type text}, {\\\"LoyaltyStatus\\\", type text}, {\\\"RegistrationDate\\\", type date}, {\\\"PreferredLanguage\\\", type text}}),\\n    #\\\"Renamed Columns\\\" = Table.RenameColumns(#\\\"Changed Type\\\",{{\\\"customer_id_pk\\\", \\\"customer_id_nk\\\"}}),\\n    #\\\"Added Index\\\" = Table.AddIndexColumn(#\\\"Renamed Columns\\\", \\\"Index\\\", 1, 1, Int64.Type),\\n    #\\\"Reordered Columns\\\" = Table.ReorderColumns(#\\\"Added Index\\\",{\\\"Index\\\", \\\"customer_id_nk\\\", \\\"FirstName\\\", \\\"LastName\\\", \\\"Email\\\", \\\"DateOfBirth\\\", \\\"Gender\\\", \\\"country_id_fk\\\", \\\"CountryName\\\", \\\"LoyaltyStatus\\\", \\\"RegistrationDate\\\", \\\"PreferredLanguage\\\"}),\\n    #\\\"Renamed Columns1\\\" = Table.RenameColumns(#\\\"Reordered Columns\\\",{{\\\"Index\\\", \\\"customer_id_pk_sk\\\"}}),\\n    #\\\"Removed Columns\\\" = Table.RemoveColumns(#\\\"Renamed Columns1\\\",{\\\"country_id_fk\\\"}),\\n    #\\\"Merged Queries\\\" = Table.NestedJoin(#\\\"Removed Columns\\\", {\\\"CountryName\\\"}, DimCountries, {\\\"CountryName\\\"}, \\\"DimCountries\\\", JoinKind.LeftOuter),\\n    #\\\"Expanded DimCountries\\\" = Table.ExpandTableColumn(#\\\"Merged Queries\\\", \\\"DimCountries\\\", {\\\"country_id_pk_sk\\\"}, {\\\"country_id_pk_sk\\\"}),\\n    #\\\"Renamed Columns2\\\" = Table.RenameColumns(#\\\"Expanded DimCountries\\\",{{\\\"country_id_pk_sk\\\", \\\"country_id_fk_sk\\\"}}),\\n    #\\\"Removed Columns1\\\" = Table.RemoveColumns(#\\\"Renamed Columns2\\\",{\\\"CountryName\\\"})\\nin\\n    #\\\"Removed Columns1\\\"\",\"ReferencedQueriesFormulaText\":{}}",
+      "loadAsTableDisabled": false,
+      "resultType": "Table",
+      "isHidden": false
+    },
+    {
+      "name": "DimSalesChannels",
+      "lineageTag": "010a822f-f4af-4041-8780-9ef71bce5c88",
+      "navigationStepName": "Navigation",
+      "text": [
+        "let",
+        "    Source = Json.Document(File.Contents(FolderPathParam & \"RawData\\sales_channels.json\")),",
+        "    #\"Converted to Table\" = Table.FromList(Source, Splitter.SplitByNothing(), null, null, ExtraValues.Error),",
+        "    #\"Expanded Column1\" = Table.ExpandRecordColumn(#\"Converted to Table\", \"Column1\", {\"channel_id_pk\", \"ChannelName\"}, {\"channel_id_pk\", \"ChannelName\"}),",
+        "    #\"Changed Type\" = Table.TransformColumnTypes(#\"Expanded Column1\",{{\"channel_id_pk\", Int64.Type}, {\"ChannelName\", type text}}),",
+        "    #\"Renamed Columns\" = Table.RenameColumns(#\"Changed Type\",{{\"channel_id_pk\", \"channel_id_nk\"}}),",
+        "    #\"Added Index\" = Table.AddIndexColumn(#\"Renamed Columns\", \"Index\", 1, 1, Int64.Type),",
+        "    #\"Reordered Columns\" = Table.ReorderColumns(#\"Added Index\",{\"Index\", \"channel_id_nk\", \"ChannelName\"}),",
+        "    #\"Renamed Columns1\" = Table.RenameColumns(#\"Reordered Columns\",{{\"Index\", \"channel_id_pk_sk\"}})",
+        "in",
+        "    #\"Renamed Columns1\""
+      ],
+      "isDirectQuery": false,
+      "lastLoadedAsTableFormulaText": "{\"IncludesReferencedQueries\":false,\"RootFormulaText\":\"let\\n    Source = Json.Document(File.Contents(FolderPathParam & \\\"RawData\\\\sales_channels.json\\\")),\\n    #\\\"Converted to Table\\\" = Table.FromList(Source, Splitter.SplitByNothing(), null, null, ExtraValues.Error),\\n    #\\\"Expanded Column1\\\" = Table.ExpandRecordColumn(#\\\"Converted to Table\\\", \\\"Column1\\\", {\\\"channel_id_pk\\\", \\\"ChannelName\\\"}, {\\\"channel_id_pk\\\", \\\"ChannelName\\\"}),\\n    #\\\"Changed Type\\\" = Table.TransformColumnTypes(#\\\"Expanded Column1\\\",{{\\\"channel_id_pk\\\", Int64.Type}, {\\\"ChannelName\\\", type text}}),\\n    #\\\"Renamed Columns\\\" = Table.RenameColumns(#\\\"Changed Type\\\",{{\\\"channel_id_pk\\\", \\\"channel_id_nk\\\"}}),\\n    #\\\"Added Index\\\" = Table.AddIndexColumn(#\\\"Renamed Columns\\\", \\\"Index\\\", 1, 1, Int64.Type),\\n    #\\\"Reordered Columns\\\" = Table.ReorderColumns(#\\\"Added Index\\\",{\\\"Index\\\", \\\"channel_id_nk\\\", \\\"ChannelName\\\"}),\\n    #\\\"Renamed Columns1\\\" = Table.RenameColumns(#\\\"Reordered Columns\\\",{{\\\"Index\\\", \\\"channel_id_pk_sk\\\"}})\\nin\\n    #\\\"Renamed Columns1\\\"\",\"ReferencedQueriesFormulaText\":{}}",
+      "loadAsTableDisabled": false,
+      "resultType": "Table",
+      "isHidden": false
+    },
+    {
+      "name": "Africa",
+      "lineageTag": "d95391d6-9cd9-42c1-8770-9eb4d9129ba5",
+      "navigationStepName": "Navigation",
+      "text": [
+        "let",
+        "    Source = Web.BrowserContents(\"https://simple.wikipedia.org/wiki/List_of_countries_by_continents\"),",
+        "    #\"Extracted Table From Html\" = Html.Table(Source, {{\"Column1\", \"TABLE[id='mwKg'] > * > TR > :nth-child(1)\"}, {\"Column2\", \"TABLE[id='mwKg'] > * > TR > :nth-child(2)\"}, {\"Column3\", \"TABLE[id='mwKg'] > * > TR > :nth-child(3)\"}, {\"Column4\", \"TABLE[id='mwKg'] > * > TR > :nth-child(4)\"}, {\"Column5\", \"TABLE[id='mwKg'] > * > TR > :nth-child(5)\"}, {\"Column6\", \"TABLE[id='mwKg'] > * > TR > :nth-child(6)\"}, {\"Column7\", \"TABLE[id='mwKg'] > * > TR > :nth-child(7)\"}, {\"Column8\", \"TABLE[id='mwKg'] > * > TR > :nth-child(8)\"}}, [RowSelector=\"TABLE[id='mwKg'] > * > TR\"]),",
+        "    #\"Promoted Headers\" = Table.PromoteHeaders(#\"Extracted Table From Html\", [PromoteAllScalars=true]),",
+        "    #\"Changed Type\" = Table.TransformColumnTypes(#\"Promoted Headers\",{{\"\", Int64.Type}, {\"Flag\", type text}, {\"English Name#(lf)[1][2][3][4]\", type text}, {\"Capital City / Capital Cities#(lf)[3][5][6]\", type text}, {\"Population 2021#(lf)[7][8]\", Int64.Type}, {\"Area[a][b]#(lf)[9]\", type text}, {\"Currency#(lf)[3]\", type text}, {\"Map\", type text}}),",
+        "    #\"Added Custom\" = Table.AddColumn(#\"Changed Type\", \"Continent\", each \"Africa\"),",
+        "    #\"Changed Type1\" = Table.TransformColumnTypes(#\"Added Custom\",{{\"Continent\", type text}}),",
+        "    #\"Reordered Columns\" = Table.ReorderColumns(#\"Changed Type1\",{\"\", \"Flag\", \"English Name#(lf)[1][2][3][4]\", \"Capital City / Capital Cities#(lf)[3][5][6]\", \"Population 2021#(lf)[7][8]\", \"Area[a][b]#(lf)[9]\", \"Currency#(lf)[3]\", \"Map\", \"Continent\"}),",
+        "    #\"Removed Columns\" = Table.RemoveColumns(#\"Reordered Columns\",{\"Flag\", \"Map\"}),",
+        "    #\"Renamed Columns\" = Table.RenameColumns(#\"Removed Columns\",{{\"English Name#(lf)[1][2][3][4]\", \"CountryName\"}, {\"Capital City / Capital Cities#(lf)[3][5][6]\", \"Capital City / Capital Cities\"}, {\"Population 2021#(lf)[7][8]\", \"Population\"}, {\"Area[a][b]#(lf)[9]\", \"Area\"}, {\"Currency#(lf)[3]\", \"Currency\"}})",
+        "in",
+        "    #\"Renamed Columns\""
+      ],
+      "loadAsTableDisabled": true,
+      "resultType": "Table",
+      "isHidden": false
+    },
+    {
+      "name": "Asia",
+      "lineageTag": "0f4f3075-11d2-4daf-8709-1242488cd6dc",
+      "navigationStepName": "Navigation",
+      "text": [
+        "let",
+        "    Source = Web.BrowserContents(\"https://simple.wikipedia.org/wiki/List_of_countries_by_continents\"),",
+        "    #\"Extracted Table From Html\" = Html.Table(Source, {{\"Column1\", \"TABLE[id='mwBYU'] > * > TR > :nth-child(1)\"}, {\"Column2\", \"TABLE[id='mwBYU'] > * > TR > :nth-child(2)\"}, {\"Column3\", \"TABLE[id='mwBYU'] > * > TR > :nth-child(3)\"}, {\"Column4\", \"TABLE[id='mwBYU'] > * > TR > :nth-child(4)\"}, {\"Column5\", \"TABLE[id='mwBYU'] > * > TR > :nth-child(5)\"}, {\"Column6\", \"TABLE[id='mwBYU'] > * > TR > :nth-child(6)\"}, {\"Column7\", \"TABLE[id='mwBYU'] > * > TR > :nth-child(7)\"}}, [RowSelector=\"TABLE[id='mwBYU'] > * > TR\"]),",
+        "    #\"Promoted Headers\" = Table.PromoteHeaders(#\"Extracted Table From Html\", [PromoteAllScalars=true]),",
+        "    #\"Changed Type\" = Table.TransformColumnTypes(#\"Promoted Headers\",{{\"\", Int64.Type}, {\"Flag\", type text}, {\"English Name#(lf)[4][10][11][12]\", type text}, {\"Capital City / Capital Cities#(lf)[12][13][14]\", type text}, {\"Population 2021#(lf)[7][8]\", Int64.Type}, {\"Area[a][b]#(lf)[9]\", type text}, {\"Map\", type text}}),",
+        "    #\"Added Custom\" = Table.AddColumn(#\"Changed Type\", \"Continent\", each \"Asia\"),",
+        "    #\"Removed Columns\" = Table.RemoveColumns(#\"Added Custom\",{\"Flag\", \"Map\"}),",
+        "    #\"Renamed Columns\" = Table.RenameColumns(#\"Removed Columns\",{{\"English Name#(lf)[4][10][11][12]\", \"CountryName\"}, {\"Capital City / Capital Cities#(lf)[12][13][14]\", \"Capital City / Capital Cities\"}, {\"Population 2021#(lf)[7][8]\", \"Population\"}, {\"Area[a][b]#(lf)[9]\", \"Area\"}}),",
+        "    #\"Added Custom1\" = Table.AddColumn(#\"Renamed Columns\", \"Currency\", each null),",
+        "    #\"Reordered Columns\" = Table.ReorderColumns(#\"Added Custom1\",{\"\", \"CountryName\", \"Capital City / Capital Cities\", \"Population\", \"Area\", \"Currency\", \"Continent\"})",
+        "in",
+        "    #\"Reordered Columns\""
+      ],
+      "loadAsTableDisabled": true,
+      "resultType": "Table",
+      "isHidden": false
+    },
+    {
+      "name": "Europe",
+      "lineageTag": "0377f8dc-6769-4977-b6a9-7e409f263b46",
+      "navigationStepName": "Navigation",
+      "text": [
+        "let",
+        "    Source = Web.BrowserContents(\"https://simple.wikipedia.org/wiki/List_of_countries_by_continents\"),",
+        "    #\"Extracted Table From Html\" = Html.Table(Source, {{\"Column1\", \"TABLE[id='mwCVc'] > * > TR > :nth-child(1)\"}, {\"Column2\", \"TABLE[id='mwCVc'] > * > TR > :nth-child(2)\"}, {\"Column3\", \"TABLE[id='mwCVc'] > * > TR > :nth-child(3)\"}, {\"Column4\", \"TABLE[id='mwCVc'] > * > TR > :nth-child(4)\"}, {\"Column5\", \"TABLE[id='mwCVc'] > * > TR > :nth-child(5)\"}, {\"Column6\", \"TABLE[id='mwCVc'] > * > TR > :nth-child(6)\"}, {\"Column7\", \"TABLE[id='mwCVc'] > * > TR > :nth-child(7)\"}, {\"Column8\", \"TABLE[id='mwCVc'] > * > TR > :nth-child(8)\"}}, [RowSelector=\"TABLE[id='mwCVc'] > * > TR\"]),",
+        "    #\"Promoted Headers\" = Table.PromoteHeaders(#\"Extracted Table From Html\", [PromoteAllScalars=true]),",
+        "    #\"Changed Type\" = Table.TransformColumnTypes(#\"Promoted Headers\",{{\"\", Int64.Type}, {\"Flag\", type text}, {\"English Name\", type text}, {\"Capital City / Capital Cities\", type text}, {\"Population 2021#(lf)[7][8]\", type text}, {\"Area[a][b]#(lf)[9]\", type text}, {\"Currency#(lf)[12]\", type text}, {\"Map\", type text}}),",
+        "    #\"Added Custom\" = Table.AddColumn(#\"Changed Type\", \"Continent\", each \"Europe\"),",
+        "    #\"Removed Columns\" = Table.RemoveColumns(#\"Added Custom\",{\"Flag\", \"Map\"}),",
+        "    #\"Renamed Columns\" = Table.RenameColumns(#\"Removed Columns\",{{\"Population 2021#(lf)[7][8]\", \"Population\"}, {\"Area[a][b]#(lf)[9]\", \"Area\"}, {\"Currency#(lf)[12]\", \"Currency\"}, {\"English Name\", \"CountryName\"}})",
+        "in",
+        "    #\"Renamed Columns\""
+      ],
+      "loadAsTableDisabled": true,
+      "resultType": "Table",
+      "isHidden": false
+    },
+    {
+      "name": "North America",
+      "lineageTag": "9d3a8b35-fb13-4cd8-9e98-30ef5daebe17",
+      "navigationStepName": "Navigation",
+      "text": [
+        "let",
+        "    Source = Web.BrowserContents(\"https://simple.wikipedia.org/wiki/List_of_countries_by_continents\"),",
+        "    #\"Extracted Table From Html\" = Html.Table(Source, {{\"Column1\", \"TABLE[id='mwDY0'] > * > TR > :nth-child(1)\"}, {\"Column2\", \"TABLE[id='mwDY0'] > * > TR > :nth-child(2)\"}, {\"Column3\", \"TABLE[id='mwDY0'] > * > TR > :nth-child(3)\"}, {\"Column4\", \"TABLE[id='mwDY0'] > * > TR > :nth-child(4)\"}, {\"Column5\", \"TABLE[id='mwDY0'] > * > TR > :nth-child(5)\"}, {\"Column6\", \"TABLE[id='mwDY0'] > * > TR > :nth-child(6)\"}, {\"Column7\", \"TABLE[id='mwDY0'] > * > TR > :nth-child(7)\"}, {\"Column8\", \"TABLE[id='mwDY0'] > * > TR > :nth-child(8)\"}}, [RowSelector=\"TABLE[id='mwDY0'] > * > TR\"]),",
+        "    #\"Promoted Headers\" = Table.PromoteHeaders(#\"Extracted Table From Html\", [PromoteAllScalars=true]),",
+        "    #\"Changed Type\" = Table.TransformColumnTypes(#\"Promoted Headers\",{{\"\", Int64.Type}, {\"Flag\", type text}, {\"English Name#(lf)[4][12][19][20]\", type text}, {\"Capital City / Capital Cities#(lf)[12][14][21]\", type text}, {\"Population 2021#(lf)[7][8]\", Int64.Type}, {\"Area[a][b]#(lf)[9]\", type text}, {\"Currency#(lf)[12]\", type text}, {\"Map\", type text}}),",
+        "    #\"Added Custom\" = Table.AddColumn(#\"Changed Type\", \"Continent\", each \"South America\"),",
+        "    #\"Removed Columns\" = Table.RemoveColumns(#\"Added Custom\",{\"Flag\", \"Map\", \"Continent\"}),",
+        "    #\"Added Custom1\" = Table.AddColumn(#\"Removed Columns\", \"Continent\", each \"North America\"),",
+        "    #\"Renamed Columns\" = Table.RenameColumns(#\"Added Custom1\",{{\"English Name#(lf)[4][12][19][20]\", \"CountryName\"}, {\"Capital City / Capital Cities#(lf)[12][14][21]\", \"Capital City / Capital Cities\"}, {\"Population 2021#(lf)[7][8]\", \"Population\"}, {\"Area[a][b]#(lf)[9]\", \"Area\"}, {\"Currency#(lf)[12]\", \"Currency\"}})",
+        "in",
+        "    #\"Renamed Columns\""
+      ],
+      "loadAsTableDisabled": true,
+      "resultType": "Table",
+      "isHidden": false
+    },
+    {
+      "name": "South America",
+      "lineageTag": "1b246a1d-9f91-458c-9463-5acbf37f4d53",
+      "navigationStepName": "Navigation",
+      "text": [
+        "let",
+        "    Source = Web.BrowserContents(\"https://simple.wikipedia.org/wiki/List_of_countries_by_continents\"),",
+        "    #\"Extracted Table From Html\" = Html.Table(Source, {{\"Column1\", \"TABLE[id='mwD-A'] > * > TR > :nth-child(1)\"}, {\"Column2\", \"TABLE[id='mwD-A'] > * > TR > :nth-child(2)\"}, {\"Column3\", \"TABLE[id='mwD-A'] > * > TR > :nth-child(3)\"}, {\"Column4\", \"TABLE[id='mwD-A'] > * > TR > :nth-child(4)\"}, {\"Column5\", \"TABLE[id='mwD-A'] > * > TR > :nth-child(5)\"}, {\"Column6\", \"TABLE[id='mwD-A'] > * > TR > :nth-child(6)\"}, {\"Column7\", \"TABLE[id='mwD-A'] > * > TR > :nth-child(7)\"}, {\"Column8\", \"TABLE[id='mwD-A'] > * > TR > :nth-child(8)\"}, {\"Column9\", \"TABLE[id='mwD-A'] > * > TR > :nth-child(9)\"}}, [RowSelector=\"TABLE[id='mwD-A'] > * > TR\"]),",
+        "    #\"Promoted Headers\" = Table.PromoteHeaders(#\"Extracted Table From Html\", [PromoteAllScalars=true]),",
+        "    #\"Changed Type\" = Table.TransformColumnTypes(#\"Promoted Headers\",{{\"\", Int64.Type}, {\"Flag\", type text}, {\"English Name\", type text}, {\"Capital City / Capital Cities\", type text}, {\"Population 2021#(lf)[7][8]\", Int64.Type}, {\"Area[a][b][9]\", type text}, {\"Official languages\", type text}, {\"Currency\", type text}, {\"Map\", type text}}),",
+        "    #\"Added Custom\" = Table.AddColumn(#\"Changed Type\", \"Continent\", each \"North America\"),",
+        "    #\"Removed Columns\" = Table.RemoveColumns(#\"Added Custom\",{\"Flag\", \"Map\", \"Continent\"}),",
+        "    #\"Added Custom1\" = Table.AddColumn(#\"Removed Columns\", \"Continent\", each \"South America\"),",
+        "    #\"Renamed Columns\" = Table.RenameColumns(#\"Added Custom1\",{{\"Population 2021#(lf)[7][8]\", \"Population\"}, {\"Area[a][b][9]\", \"Area\"}, {\"English Name\", \"CountryName\"}}),",
+        "    #\"Removed Columns1\" = Table.RemoveColumns(#\"Renamed Columns\",{\"Official languages\"})",
+        "in",
+        "    #\"Removed Columns1\""
+      ],
+      "loadAsTableDisabled": true,
+      "resultType": "Table",
+      "isHidden": false
+    },
+    {
+      "name": "Oceania",
+      "lineageTag": "de797fbd-9579-4071-bc0b-394b115baedd",
+      "navigationStepName": "Navigation",
+      "text": [
+        "let",
+        "    Source = Web.BrowserContents(\"https://simple.wikipedia.org/wiki/List_of_countries_by_continents\"),",
+        "    #\"Extracted Table From Html\" = Html.Table(Source, {{\"Column1\", \"TABLE[id='mwEQc'] > * > TR > :nth-child(1)\"}, {\"Column2\", \"TABLE[id='mwEQc'] > * > TR > :nth-child(2)\"}, {\"Column3\", \"TABLE[id='mwEQc'] > * > TR > :nth-child(3)\"}, {\"Column4\", \"TABLE[id='mwEQc'] > * > TR > :nth-child(4)\"}, {\"Column5\", \"TABLE[id='mwEQc'] > * > TR > :nth-child(5)\"}, {\"Column6\", \"TABLE[id='mwEQc'] > * > TR > :nth-child(6)\"}, {\"Column7\", \"TABLE[id='mwEQc'] > * > TR > :nth-child(7)\"}, {\"Column8\", \"TABLE[id='mwEQc'] > * > TR > :nth-child(8)\"}, {\"Column9\", \"TABLE[id='mwEQc'] > * > TR > :nth-child(9)\"}}, [RowSelector=\"TABLE[id='mwEQc'] > * > TR\"]),",
+        "    #\"Promoted Headers\" = Table.PromoteHeaders(#\"Extracted Table From Html\", [PromoteAllScalars=true]),",
+        "    #\"Changed Type\" = Table.TransformColumnTypes(#\"Promoted Headers\",{{\"\", Int64.Type}, {\"Flag\", type text}, {\"English Name\", type text}, {\"Capital City / Capital Cities\", type text}, {\"Population 2021#(lf)[7][8]\", Int64.Type}, {\"Area[a][b]#(lf)[9]\", type text}, {\"Official languages\", type text}, {\"Currency\", type text}, {\"Map\", type text}}),",
+        "    #\"Removed Columns\" = Table.RemoveColumns(#\"Changed Type\",{\"Flag\", \"Map\"}),",
+        "    #\"Renamed Columns\" = Table.RenameColumns(#\"Removed Columns\",{{\"Population 2021#(lf)[7][8]\", \"Population\"}, {\"Area[a][b]#(lf)[9]\", \"Area\"}}),",
+        "    #\"Removed Columns1\" = Table.RemoveColumns(#\"Renamed Columns\",{\"Official languages\"}),",
+        "    #\"Added Custom\" = Table.AddColumn(#\"Removed Columns1\", \"Continent\", each \"Oceania\"),",
+        "    #\"Renamed Columns1\" = Table.RenameColumns(#\"Added Custom\",{{\"English Name\", \"CountryName\"}})",
+        "in",
+        "    #\"Renamed Columns1\""
+      ],
+      "loadAsTableDisabled": true,
+      "resultType": "Table",
+      "isHidden": false
+    },
+    {
+      "name": "DimDate",
+      "lineageTag": "9d4c4db5-264e-4202-93f2-bd7c75443fa5",
+      "navigationStepName": "Navigation",
+      "text": [
+        "let",
+        "    StartDate = #date(2023, 1, 1),",
+        "    EndDate = #date(2023, 12, 31),",
+        "    NumberOfDays = Duration.Days(EndDate - StartDate) + 1,",
+        "    DateList = List.Dates(StartDate, NumberOfDays, #duration(1,0,0,0)),",
+        "    #\"Converted to Table\" = Table.FromList(DateList, Splitter.SplitByNothing(), {\"Date\"}),",
+        "    #\"Changed Type\" = Table.TransformColumnTypes(#\"Converted to Table\",{{\"Date\", type date}}),",
+        "    #\"Added Year\" = Table.AddColumn(#\"Changed Type\", \"Year\", each Date.Year([Date]), Int64.Type),",
+        "    #\"Added Quarter\" = Table.AddColumn(#\"Added Year\", \"Quarter\", each \"Q\" & Text.From(Date.QuarterOfYear([Date])), type text),",
+        "    #\"Added Month Number\" = Table.AddColumn(#\"Added Quarter\", \"MonthNumber\", each Date.Month([Date]), Int64.Type),",
+        "    #\"Added Month Name\" = Table.AddColumn(#\"Added Month Number\", \"MonthName\", each Date.MonthName([Date]), type text),",
+        "    #\"Added Day\" = Table.AddColumn(#\"Added Month Name\", \"Day\", each Date.Day([Date]), Int64.Type),",
+        "    #\"Added Day Name\" = Table.AddColumn(#\"Added Day\", \"DayName\", each Date.DayOfWeekName([Date]), type text),",
+        "    #\"Added Week Number\" = Table.AddColumn(#\"Added Day Name\", \"WeekOfYear\", each Date.WeekOfYear([Date]), Int64.Type),",
+        "    #\"Added IsWeekend\" = Table.AddColumn(#\"Added Week Number\", \"IsWeekend\", each Date.DayOfWeek([Date], Day.Monday) >= 5, type logical),",
+        "    #\"Added Date SK\" = Table.AddColumn(#\"Added IsWeekend\", \"date_id_pk_sk\", each Date.ToText([Date], \"yyyyMMdd\"), type text),",
+        "    #\"Changed SK Type\" = Table.TransformColumnTypes(#\"Added Date SK\",{{\"date_id_pk_sk\", Int64.Type}})",
+        "in",
+        "    #\"Changed SK Type\""
+      ],
+      "isDirectQuery": false,
+      "lastLoadedAsTableFormulaText": "{\"IncludesReferencedQueries\":false,\"RootFormulaText\":\"let\\n    StartDate = #date(2023, 1, 1),\\n    EndDate = #date(2023, 12, 31),\\n    NumberOfDays = Duration.Days(EndDate - StartDate) + 1,\\n    DateList = List.Dates(StartDate, NumberOfDays, #duration(1,0,0,0)),\\n    #\\\"Converted to Table\\\" = Table.FromList(DateList, Splitter.SplitByNothing(), {\\\"Date\\\"}),\\n    #\\\"Changed Type\\\" = Table.TransformColumnTypes(#\\\"Converted to Table\\\",{{\\\"Date\\\", type date}}),\\n    #\\\"Added Year\\\" = Table.AddColumn(#\\\"Changed Type\\\", \\\"Year\\\", each Date.Year([Date]), Int64.Type),\\n    #\\\"Added Quarter\\\" = Table.AddColumn(#\\\"Added Year\\\", \\\"Quarter\\\", each \\\"Q\\\" & Text.From(Date.QuarterOfYear([Date])), type text),\\n    #\\\"Added Month Number\\\" = Table.AddColumn(#\\\"Added Quarter\\\", \\\"MonthNumber\\\", each Date.Month([Date]), Int64.Type),\\n    #\\\"Added Month Name\\\" = Table.AddColumn(#\\\"Added Month Number\\\", \\\"MonthName\\\", each Date.MonthName([Date]), type text),\\n    #\\\"Added Day\\\" = Table.AddColumn(#\\\"Added Month Name\\\", \\\"Day\\\", each Date.Day([Date]), Int64.Type),\\n    #\\\"Added Day Name\\\" = Table.AddColumn(#\\\"Added Day\\\", \\\"DayName\\\", each Date.DayOfWeekName([Date]), type text),\\n    #\\\"Added Week Number\\\" = Table.AddColumn(#\\\"Added Day Name\\\", \\\"WeekOfYear\\\", each Date.WeekOfYear([Date]), Int64.Type),\\n    #\\\"Added IsWeekend\\\" = Table.AddColumn(#\\\"Added Week Number\\\", \\\"IsWeekend\\\", each Date.DayOfWeek([Date], Day.Monday) >= 5, type logical),\\n    #\\\"Added Date SK\\\" = Table.AddColumn(#\\\"Added IsWeekend\\\", \\\"date_id_pk_sk\\\", each Date.ToText([Date], \\\"yyyyMMdd\\\"), type text),\\n    #\\\"Changed SK Type\\\" = Table.TransformColumnTypes(#\\\"Added Date SK\\\",{{\\\"date_id_pk_sk\\\", Int64.Type}})\\nin\\n    #\\\"Changed SK Type\\\"\",\"ReferencedQueriesFormulaText\":{}}",
+      "loadAsTableDisabled": false,
+      "resultType": "Table",
+      "isHidden": false
+    },
+    {
+      "name": "DimExchangeRates",
+      "lineageTag": "a8be0467-99c6-492b-88f4-076a350837e8",
+      "navigationStepName": "Navigation",
+      "text": [
+        "let",
+        "    Source = Json.Document(Web.Contents(\"https://api.frankfurter.app/2023-01-01..2023-12-31\", [Query=[from=\"USD\", to=\"AUD,BRL,CAD,CNY,EUR,GBP,INR,JPY,MXN,NZD,ZAR\"]])),",
+        "    rates = Source[rates],",
+        "    ToTable = Record.ToTable(rates),",
+        "    RenameCols = Table.RenameColumns(ToTable, {{\"Name\", \"Date\"}, {\"Value\", \"RatesRecord\"}}),",
+        "    ExpandRates = Table.ExpandRecordColumn(RenameCols, \"RatesRecord\", {\"AUD\",\"BRL\",\"CAD\",\"CNY\",\"EUR\",\"GBP\",\"INR\",\"JPY\",\"MXN\",\"NZD\",\"ZAR\"}),",
+        "    Unpivot = Table.UnpivotOtherColumns(ExpandRates, {\"Date\"}, \"Currency\", \"Rate\"),",
+        "    AddPair = Table.AddColumn(Unpivot, \"CurrencyPair\", each [Currency] & \"USD\"),",
+        "    ChangedType = Table.TransformColumnTypes(AddPair,{{\"Date\", type date}, {\"Rate\", type number}}),",
+        "    AddSK = Table.AddColumn(ChangedType, \"exchange_rate_sk_pk\", each Date.ToText([Date], \"yyyyMMdd\") & \"_\" & [CurrencyPair]),",
+        "    Final = Table.SelectColumns(AddSK, {\"exchange_rate_sk_pk\", \"Date\", \"Currency\", \"CurrencyPair\", \"Rate\"})",
+        "in",
+        "    Final"
+      ],
+      "isDirectQuery": false,
+      "lastLoadedAsTableFormulaText": "{\"IncludesReferencedQueries\":false,\"RootFormulaText\":\"let\\n    Source = Json.Document(Web.Contents(\\\"https://api.frankfurter.app/2023-01-01..2023-12-31\\\", [Query=[from=\\\"USD\\\", to=\\\"AUD,BRL,CAD,CNY,EUR,GBP,INR,JPY,MXN,NZD,ZAR\\\"]])),\\n    rates = Source[rates],\\n    ToTable = Record.ToTable(rates),\\n    RenameCols = Table.RenameColumns(ToTable, {{\\\"Name\\\", \\\"Date\\\"}, {\\\"Value\\\", \\\"RatesRecord\\\"}}),\\n    ExpandRates = Table.ExpandRecordColumn(RenameCols, \\\"RatesRecord\\\", {\\\"AUD\\\",\\\"BRL\\\",\\\"CAD\\\",\\\"CNY\\\",\\\"EUR\\\",\\\"GBP\\\",\\\"INR\\\",\\\"JPY\\\",\\\"MXN\\\",\\\"NZD\\\",\\\"ZAR\\\"}),\\n    Unpivot = Table.UnpivotOtherColumns(ExpandRates, {\\\"Date\\\"}, \\\"Currency\\\", \\\"Rate\\\"),\\n    AddPair = Table.AddColumn(Unpivot, \\\"CurrencyPair\\\", each [Currency] & \\\"USD\\\"),\\n    ChangedType = Table.TransformColumnTypes(AddPair,{{\\\"Date\\\", type date}, {\\\"Rate\\\", type number}}),\\n    AddSK = Table.AddColumn(ChangedType, \\\"exchange_rate_sk_pk\\\", each Date.ToText([Date], \\\"yyyyMMdd\\\") & \\\"_\\\" & [CurrencyPair]),\\n    Final = Table.SelectColumns(AddSK, {\\\"exchange_rate_sk_pk\\\", \\\"Date\\\", \\\"Currency\\\", \\\"CurrencyPair\\\", \\\"Rate\\\"})\\nin\\n    Final\",\"ReferencedQueriesFormulaText\":{}}",
+      "loadAsTableDisabled": false,
+      "resultType": "Table",
+      "isHidden": false
+    },
+    {
+      "name": "Sample File",
+      "lineageTag": "e1713c3b-f60d-4922-8d55-8e87e979dc01",
+      "queryGroupId": "f091a189-7fc7-4075-9fbe-83bded8aa860",
+      "text": [
+        "let",
+        "    Source = Folder.Files(FolderPathParam & \"RawData\\ecommerce_sales_transactions\"),",
+        "    Navigation1 = Source{0}[Content]",
+        "in",
+        "    Navigation1"
+      ],
+      "loadAsTableDisabled": true,
+      "resultType": "Binary",
+      "isHidden": false
+    },
+    {
+      "name": "Parameter1",
+      "lineageTag": "4c7bb424-1128-490a-9eab-f130540cb055",
+      "queryGroupId": "f091a189-7fc7-4075-9fbe-83bded8aa860",
+      "text": [
+        "#\"Sample File\" meta [IsParameterQuery=true, BinaryIdentifier=#\"Sample File\", Type=\"Binary\", IsParameterQueryRequired=true]"
+      ],
+      "loadAsTableDisabled": true,
+      "resultType": "Binary",
+      "isHidden": false
+    },
+    {
+      "name": "FolderPathParam",
+      "lineageTag": "8b5730f6-6073-47d3-afa4-ca446ca105d5",
+      "queryGroupId": "f091a189-7fc7-4075-9fbe-83bded8aa860",
+      "navigationStepName": "Navigation",
+      "text": [
+        "\"C:\\Users\\DELL\\Desktop\\ACA_PowerBI_Assignment1\\\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]"
+      ],
+      "loadAsTableDisabled": true,
+      "resultType": "Text",
+      "isHidden": false
+    },
+    {
+      "name": "Transform Sample File",
+      "lineageTag": "587edf76-e3f7-4dbd-82f8-adb178082967",
+      "queryGroupId": "333e157f-da3e-4f76-822e-76c67d3bbbab",
+      "text": [
+        "let",
+        "    Source = Csv.Document(Parameter1,[Delimiter=\",\", Columns=13, Encoding=1252, QuoteStyle=QuoteStyle.None]),",
+        "    #\"Promoted Headers\" = Table.PromoteHeaders(Source, [PromoteAllScalars=true])",
+        "in",
+        "    #\"Promoted Headers\""
+      ],
+      "loadAsTableDisabled": true,
+      "resultType": "Table",
+      "isHidden": false
+    },
+    {
+      "name": "Transform File",
+      "lineageTag": "7f23e0b2-fa26-4553-b436-547e66bd84a6",
+      "queryGroupId": "f091a189-7fc7-4075-9fbe-83bded8aa860",
+      "text": [
+        "let",
+        "    Source = (Parameter1 as binary) => let",
+        "    Source = Csv.Document(Parameter1,[Delimiter=\",\", Columns=13, Encoding=1252, QuoteStyle=QuoteStyle.None]),",
+        "    #\"Promoted Headers\" = Table.PromoteHeaders(Source, [PromoteAllScalars=true])",
+        "in",
+        "    #\"Promoted Headers\"",
+        "in",
+        "    Source"
+      ],
+      "loadAsTableDisabled": true,
+      "resultType": "Function",
+      "isHidden": false
+    },
+    {
+      "name": "DimCountries",
+      "lineageTag": "01d2cd1c-8226-4748-be51-5f08b48bfb2a",
+      "navigationStepName": "Navigation",
+      "text": [
+        "let",
+        "    Source = Table.Combine({Africa, Asia, Europe, #\"North America\", #\"South America\", Oceania}),",
+        "    #\"Split Column by Delimiter\" = Table.SplitColumn(Source, \"Area\", Splitter.SplitTextByEachDelimiter({\"(\"}, QuoteStyle.Csv, false), {\"Area.1\", \"Area.2\"}),",
+        "    #\"Changed Type\" = Table.TransformColumnTypes(#\"Split Column by Delimiter\",{{\"Area.1\", type text}, {\"Area.2\", type text}}),",
+        "    #\"Renamed Columns\" = Table.RenameColumns(#\"Changed Type\",{{\"Area.1\", \"Area_km2\"}, {\"Area.2\", \"Area_mi2\"}}),",
+        "    #\"Replaced Value\" = Table.ReplaceValue(#\"Renamed Columns\",\"km2\",\"\",Replacer.ReplaceText,{\"Area_km2\"}),",
+        "    #\"Replaced Value1\" = Table.ReplaceValue(#\"Replaced Value\",\"sq mi)\",\"\",Replacer.ReplaceText,{\"Area_mi2\"}),",
+        "    #\"Replaced Value2\" = Table.ReplaceValue(#\"Replaced Value1\",\")\",\"\",Replacer.ReplaceText,{\"Area_mi2\"}),",
+        "    #\"Replaced Value3\" = Table.ReplaceValue(#\"Replaced Value2\",\"mi\",\"\",Replacer.ReplaceText,{\"Area_mi2\"}),",
+        "    #\"Replaced Value4\" = Table.ReplaceValue(#\"Replaced Value3\",\"sq\",\"\",Replacer.ReplaceText,{\"Area_mi2\"}),",
+        "    #\"Replaced Value5\" = Table.ReplaceValue(#\"Replaced Value4\",\",\",\"\",Replacer.ReplaceText,{\"Area_km2\", \"Area_mi2\"}),",
+        "    #\"Added Index\" = Table.AddIndexColumn(#\"Replaced Value5\", \"Index\", 1, 1, Int64.Type),",
+        "    #\"Reordered Columns\" = Table.ReorderColumns(#\"Added Index\",{\"Index\", \"\", \"CountryName\", \"Capital City / Capital Cities\", \"Population\", \"Area_km2\", \"Area_mi2\", \"Currency\", \"Continent\"}),",
+        "    #\"Renamed Columns1\" = Table.RenameColumns(#\"Reordered Columns\",{{\"Index\", \"country_id_pk_sk\"}}),",
+        "    #\"Changed Type1\" = Table.TransformColumnTypes(#\"Renamed Columns1\",{{\"Population\", Int64.Type}, {\"Area_km2\", type number}, {\"Area_mi2\", type number}, {\"Currency\", type text}, {\"Continent\", type text}}),",
+        "    #\"Filtered Rows\" = Table.SelectRows(#\"Changed Type1\", each true)",
+        "in",
+        "    #\"Filtered Rows\""
+      ],
+      "isDirectQuery": false,
+      "lastLoadedAsTableFormulaText": "{\"IncludesReferencedQueries\":false,\"RootFormulaText\":\"let\\n    Source = Table.Combine({Africa, Asia, Europe, #\\\"North America\\\", #\\\"South America\\\", Oceania}),\\n    #\\\"Split Column by Delimiter\\\" = Table.SplitColumn(Source, \\\"Area\\\", Splitter.SplitTextByEachDelimiter({\\\"(\\\"}, QuoteStyle.Csv, false), {\\\"Area.1\\\", \\\"Area.2\\\"}),\\n    #\\\"Changed Type\\\" = Table.TransformColumnTypes(#\\\"Split Column by Delimiter\\\",{{\\\"Area.1\\\", type text}, {\\\"Area.2\\\", type text}}),\\n    #\\\"Renamed Columns\\\" = Table.RenameColumns(#\\\"Changed Type\\\",{{\\\"Area.1\\\", \\\"Area_km2\\\"}, {\\\"Area.2\\\", \\\"Area_mi2\\\"}}),\\n    #\\\"Replaced Value\\\" = Table.ReplaceValue(#\\\"Renamed Columns\\\",\\\"km2\\\",\\\"\\\",Replacer.ReplaceText,{\\\"Area_km2\\\"}),\\n    #\\\"Replaced Value1\\\" = Table.ReplaceValue(#\\\"Replaced Value\\\",\\\"sq mi)\\\",\\\"\\\",Replacer.ReplaceText,{\\\"Area_mi2\\\"}),\\n    #\\\"Replaced Value2\\\" = Table.ReplaceValue(#\\\"Replaced Value1\\\",\\\")\\\",\\\"\\\",Replacer.ReplaceText,{\\\"Area_mi2\\\"}),\\n    #\\\"Replaced Value3\\\" = Table.ReplaceValue(#\\\"Replaced Value2\\\",\\\"mi\\\",\\\"\\\",Replacer.ReplaceText,{\\\"Area_mi2\\\"}),\\n    #\\\"Replaced Value4\\\" = Table.ReplaceValue(#\\\"Replaced Value3\\\",\\\"sq\\\",\\\"\\\",Replacer.ReplaceText,{\\\"Area_mi2\\\"}),\\n    #\\\"Replaced Value5\\\" = Table.ReplaceValue(#\\\"Replaced Value4\\\",\\\",\\\",\\\"\\\",Replacer.ReplaceText,{\\\"Area_km2\\\", \\\"Area_mi2\\\"}),\\n    #\\\"Added Index\\\" = Table.AddIndexColumn(#\\\"Replaced Value5\\\", \\\"Index\\\", 1, 1, Int64.Type),\\n    #\\\"Reordered Columns\\\" = Table.ReorderColumns(#\\\"Added Index\\\",{\\\"Index\\\", \\\"\\\", \\\"CountryName\\\", \\\"Capital City / Capital Cities\\\", \\\"Population\\\", \\\"Area_km2\\\", \\\"Area_mi2\\\", \\\"Currency\\\", \\\"Continent\\\"}),\\n    #\\\"Renamed Columns1\\\" = Table.RenameColumns(#\\\"Reordered Columns\\\",{{\\\"Index\\\", \\\"country_id_pk_sk\\\"}}),\\n    #\\\"Changed Type1\\\" = Table.TransformColumnTypes(#\\\"Renamed Columns1\\\",{{\\\"Population\\\", Int64.Type}, {\\\"Area_km2\\\", type number}, {\\\"Area_mi2\\\", type number}, {\\\"Currency\\\", type text}, {\\\"Continent\\\", type text}}),\\n    #\\\"Filtered Rows\\\" = Table.SelectRows(#\\\"Changed Type1\\\", each true)\\nin\\n    #\\\"Filtered Rows\\\"\",\"ReferencedQueriesFormulaText\":{}}",
+      "loadAsTableDisabled": false,
+      "resultType": "Table",
+      "isHidden": false
+    },
+    {
+      "name": "Sample File (2)",
+      "lineageTag": "cafbb13a-7ab3-4d38-aee1-8f72f0f49a9a",
+      "queryGroupId": "e7300b46-db11-435f-a1a7-0848db903323",
+      "text": [
+        "let",
+        "    Source = Folder.Files(\"C:\\Users\\DELL\\Desktop\\RawData_PowerBI_ACA_Assignment1\\ecommerce_sales_transactions\"),",
+        "    Navigation1 = Source{0}[Content]",
+        "in",
+        "    Navigation1"
+      ],
+      "loadAsTableDisabled": true,
+      "resultType": "Binary",
+      "isHidden": false
+    },
+    {
+      "name": "Parameter2",
+      "lineageTag": "94661c12-40a7-4c71-af25-8e9c72b8aaf8",
+      "queryGroupId": "e7300b46-db11-435f-a1a7-0848db903323",
+      "text": [
+        "#\"Sample File (2)\" meta [IsParameterQuery=true, BinaryIdentifier=#\"Sample File (2)\", Type=\"Binary\", IsParameterQueryRequired=true]"
+      ],
+      "loadAsTableDisabled": true,
+      "resultType": "Binary",
+      "isHidden": false
+    },
+    {
+      "name": "Transform Sample File (2)",
+      "lineageTag": "4284228f-242b-4a0b-a676-452b7577280f",
+      "queryGroupId": "a74ef5cb-152c-42e6-8efd-37a69fe7b862",
+      "text": [
+        "let",
+        "    Source = Csv.Document(Parameter2,[Delimiter=\",\", Columns=13, Encoding=1252, QuoteStyle=QuoteStyle.None]),",
+        "    #\"Promoted Headers\" = Table.PromoteHeaders(Source, [PromoteAllScalars=true])",
+        "in",
+        "    #\"Promoted Headers\""
+      ],
+      "loadAsTableDisabled": true,
+      "resultType": "Table",
+      "isHidden": false
+    },
+    {
+      "name": "Transform File (2)",
+      "lineageTag": "ddbd43d6-3d16-4676-b7d1-6a3e3f5d7c77",
+      "queryGroupId": "e7300b46-db11-435f-a1a7-0848db903323",
+      "text": [
+        "let",
+        "    Source = (Parameter2 as binary) => let",
+        "    Source = Csv.Document(Parameter2,[Delimiter=\",\", Columns=13, Encoding=1252, QuoteStyle=QuoteStyle.None]),",
+        "    #\"Promoted Headers\" = Table.PromoteHeaders(Source, [PromoteAllScalars=true])",
+        "in",
+        "    #\"Promoted Headers\"",
+        "in",
+        "    Source"
+      ],
+      "loadAsTableDisabled": true,
+      "resultType": "Function",
+      "isHidden": false
+    }
+  ],
+  "queryGroups": [
+    {
+      "name": "Transform File from ecommerce_sales_transactions",
+      "id": "333e157f-da3e-4f76-822e-76c67d3bbbab",
+      "description": ""
+    },
+    {
+      "name": "Helper Queries",
+      "id": "f091a189-7fc7-4075-9fbe-83bded8aa860",
+      "description": "",
+      "parentId": "333e157f-da3e-4f76-822e-76c67d3bbbab"
+    },
+    {
+      "name": "Transform File from ecommerce_sales_transactions",
+      "id": "a74ef5cb-152c-42e6-8efd-37a69fe7b862",
+      "description": "",
+      "parentId": "f091a189-7fc7-4075-9fbe-83bded8aa860"
+    },
+    {
+      "name": "Helper Queries",
+      "id": "e7300b46-db11-435f-a1a7-0848db903323",
+      "description": "",
+      "parentId": "a74ef5cb-152c-42e6-8efd-37a69fe7b862"
+    }
+  ],
+  "culture": "en-US",
+  "firewallEnabled": true
+}

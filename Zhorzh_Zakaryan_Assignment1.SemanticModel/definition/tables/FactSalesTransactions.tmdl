@@ -1,0 +1,237 @@
+table FactSalesTransactions
+	lineageTag: 3f208ea5-382d-421a-a782-fae4f85dcf27
+
+	column transaction_id_pk_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: 4504b835-fe44-4c64-9681-e0e9eb83826d
+		summarizeBy: sum
+		sourceColumn: transaction_id_pk_sk
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Source.Name'
+		dataType: string
+		lineageTag: 46e55ec1-7a74-4fcf-b134-1609aa68b65a
+		summarizeBy: none
+		sourceColumn: Source.Name
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column transaction_is_nk
+		dataType: string
+		lineageTag: e8a289f7-d611-40ab-bb9b-fbafa02dd4bf
+		summarizeBy: none
+		sourceColumn: transaction_is_nk
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column TransactionDate
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: dc2f95f8-37c0-43fb-a90d-3418dea0ea5b
+		summarizeBy: none
+		sourceColumn: TransactionDate
+
+		variation Variation
+			isDefault
+			relationship: 7122dd49-cc46-4d55-a500-1eb174db97d3
+			defaultHierarchy: LocalDateTable_82aca4c7-16fd-4542-8282-759cf62c47df.'Date Hierarchy'
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Quantity
+		dataType: int64
+		formatString: 0
+		lineageTag: 4da01d1b-e94e-4786-94c1-9bfacdf055b3
+		summarizeBy: sum
+		sourceColumn: Quantity
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column UnitPriceAtSale_LocalCurrency
+		dataType: double
+		lineageTag: 40d2404d-e1cb-4951-9f95-530251001cb1
+		summarizeBy: sum
+		sourceColumn: UnitPriceAtSale_LocalCurrency
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column TotalRevenue_LocalCurrency
+		dataType: double
+		lineageTag: 51c0ce37-cb02-4a01-a3c3-96f683207e13
+		summarizeBy: sum
+		sourceColumn: TotalRevenue_LocalCurrency
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Currency
+		dataType: string
+		lineageTag: 29888f67-4ed4-4c6e-b8be-413bcfe47171
+		summarizeBy: none
+		sourceColumn: Currency
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column DiscountAmount_Local
+		dataType: double
+		lineageTag: fd7df789-1a84-4943-b860-4f7e79f3543a
+		summarizeBy: sum
+		sourceColumn: DiscountAmount_Local
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column ShippingCost_Local
+		dataType: double
+		lineageTag: 94ca2ffa-8f77-461f-97aa-fdb03570601e
+		summarizeBy: sum
+		sourceColumn: ShippingCost_Local
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column PaymentMethod
+		dataType: string
+		lineageTag: 7a0aeb25-c7aa-4a3d-a042-c727670b91b7
+		summarizeBy: none
+		sourceColumn: PaymentMethod
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column exchange_rate_sk_fk
+		dataType: string
+		lineageTag: 42ecedca-4204-4c94-a9b2-d2a3a10e1e71
+		summarizeBy: none
+		sourceColumn: exchange_rate_sk_fk
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_id_fk_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: 728da8c7-9cb0-40de-99ae-e5e759d28329
+		summarizeBy: none
+		sourceColumn: product_id_fk_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	column customer_id_fk_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: 8da8da77-339f-4770-92b3-6f385fcb8472
+		summarizeBy: none
+		sourceColumn: customer_id_fk_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	column channel_id_fk_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: 19ea37a2-e7c5-42fc-b923-1e2c118a65df
+		summarizeBy: none
+		sourceColumn: channel_id_fk_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	column country_id_fk_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: d6d915ad-6e6d-4710-8c8c-13912dd383dc
+		summarizeBy: none
+		sourceColumn: country_id_fk_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	column date_id_fk_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: 64574084-ade4-4521-af51-0425645b154a
+		summarizeBy: none
+		sourceColumn: date_id_fk_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	partition FactSalesTransactions = m
+		mode: import
+		source =
+				let
+				    Source = Folder.Files("C:\Users\DELL\Desktop\RawData_PowerBI_ACA_Assignment1\ecommerce_sales_transactions"),
+				    #"Filtered Hidden Files1" = Table.SelectRows(Source, each [Attributes]?[Hidden]? <> true),
+				    #"Invoke Custom Function1" = Table.AddColumn(#"Filtered Hidden Files1", "Transform File (2)", each #"Transform File (2)"([Content])),
+				    #"Renamed Columns1" = Table.RenameColumns(#"Invoke Custom Function1", {"Name", "Source.Name"}),
+				    #"Removed Other Columns1" = Table.SelectColumns(#"Renamed Columns1", {"Source.Name", "Transform File (2)"}),
+				    #"Expanded Table Column1" = Table.ExpandTableColumn(#"Removed Other Columns1", "Transform File (2)", Table.ColumnNames(#"Transform File (2)"(#"Sample File (2)"))),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Expanded Table Column1",{{"Source.Name", type text}, {"TransactionID", type text}, {"TransactionDate", type datetime}, {"CustomerID", Int64.Type}, {"ProductID", Int64.Type}, {"SalesChannelID", Int64.Type}, {"Quantity", Int64.Type}, {"UnitPriceAtSale_LocalCurrency", type number}, {"TotalRevenue_LocalCurrency", type number}, {"Currency", type text}, {"DiscountAmount_Local", type number}, {"ShippingCost_Local", type number}, {"PaymentMethod", type text}, {"CountryName", type text}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"TransactionID", "transaction_is_nk"}}),
+				    #"Added Index" = Table.AddIndexColumn(#"Renamed Columns", "Index", 1, 1, Int64.Type),
+				    #"Reordered Columns" = Table.ReorderColumns(#"Added Index",{"Index", "Source.Name", "transaction_is_nk", "TransactionDate", "CustomerID", "ProductID", "SalesChannelID", "Quantity", "UnitPriceAtSale_LocalCurrency", "TotalRevenue_LocalCurrency", "Currency", "DiscountAmount_Local", "ShippingCost_Local", "PaymentMethod", "CountryName"}),
+				    #"Renamed Columns2" = Table.RenameColumns(#"Reordered Columns",{{"Index", "transaction_id_pk_sk"}}),
+				    #"Merged Queries" = Table.NestedJoin(#"Renamed Columns2", {"ProductID"}, DimProducts, {"product_id_nk"}, "DimProducts", JoinKind.LeftOuter),
+				    #"Removed Columns" = Table.RemoveColumns(#"Merged Queries",{"ProductID"}),
+				    #"Merged Queries1" = Table.NestedJoin(#"Removed Columns", {"CustomerID"}, DimCountries, {"country_id_pk_sk"}, "DimCountries", JoinKind.LeftOuter),
+				    #"Renamed Columns3" = Table.RenameColumns(#"Merged Queries1",{{"DimProducts", "product_id_fk_sk"}, {"DimCountries", "customer_id_fk_sk"}}),
+				    #"Merged Queries2" = Table.NestedJoin(#"Renamed Columns3", {"SalesChannelID"}, DimSalesChannels, {"channel_id_pk_sk"}, "DimSalesChannels", JoinKind.LeftOuter),
+				    #"Renamed Columns4" = Table.RenameColumns(#"Merged Queries2",{{"DimSalesChannels", "channel_id_fk_sk"}}),
+				    #"Removed Columns1" = Table.RemoveColumns(#"Renamed Columns4",{"CustomerID", "SalesChannelID"}),
+				    #"Merged Queries3" = Table.NestedJoin(#"Removed Columns1", {"CountryName"}, DimCountries, {"CountryName"}, "DimCountries", JoinKind.LeftOuter),
+				    #"Renamed Columns5" = Table.RenameColumns(#"Merged Queries3",{{"DimCountries", "country_id_fk_sk"}}),
+				    #"Removed Columns2" = Table.RemoveColumns(#"Renamed Columns5",{"CountryName"}),
+				    #"Inserted Date" = Table.AddColumn(#"Removed Columns2", "Date", each DateTime.Date([TransactionDate]), type date),
+				    #"Renamed Columns6" = Table.RenameColumns(#"Inserted Date",{{"Date", "DateOnly"}}),
+				    #"Merged Queries4" = Table.NestedJoin(#"Renamed Columns6", {"DateOnly"}, DimDate, {"Date"}, "DimDate", JoinKind.LeftOuter),
+				    #"Renamed Columns7" = Table.RenameColumns(#"Merged Queries4",{{"DimDate", "date_id_fk_sk"}}),
+				    #"Removed Columns3" = Table.RemoveColumns(#"Renamed Columns7",{"DateOnly"}),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Removed Columns3",{{"TransactionDate", type date}}),
+				    #"Added Custom" = Table.AddColumn(#"Changed Type1", "exchange_rate_sk_fk", each Date.ToText([TransactionDate], "yyyyMMdd") & "_" & [Currency] & "USD"),
+				    #"Expanded product_id_fk_sk" = Table.ExpandTableColumn(#"Added Custom", "product_id_fk_sk", {"product_id_pk_sk"}, {"product_id_pk_sk"}),
+				    #"Renamed Columns8" = Table.RenameColumns(#"Expanded product_id_fk_sk",{{"product_id_pk_sk", "product_id_fk_sk"}}),
+				    #"Expanded customer_id_fk_sk" = Table.ExpandTableColumn(#"Renamed Columns8", "customer_id_fk_sk", {"country_id_pk_sk"}, {"country_id_pk_sk"}),
+				    #"Renamed Columns9" = Table.RenameColumns(#"Expanded customer_id_fk_sk",{{"country_id_pk_sk", "customer_id_fk_sk"}}),
+				    #"Expanded channel_id_fk_sk" = Table.ExpandTableColumn(#"Renamed Columns9", "channel_id_fk_sk", {"channel_id_pk_sk"}, {"channel_id_pk_sk"}),
+				    #"Renamed Columns10" = Table.RenameColumns(#"Expanded channel_id_fk_sk",{{"channel_id_pk_sk", "channel_id_fk_sk"}}),
+				    #"Expanded country_id_fk_sk" = Table.ExpandTableColumn(#"Renamed Columns10", "country_id_fk_sk", {"country_id_pk_sk"}, {"country_id_pk_sk"}),
+				    #"Renamed Columns11" = Table.RenameColumns(#"Expanded country_id_fk_sk",{{"country_id_pk_sk", "country_id_fk_sk"}}),
+				    #"Expanded date_id_fk_sk" = Table.ExpandTableColumn(#"Renamed Columns11", "date_id_fk_sk", {"date_id_pk_sk"}, {"date_id_pk_sk"}),
+				    #"Renamed Columns12" = Table.RenameColumns(#"Expanded date_id_fk_sk",{{"date_id_pk_sk", "date_id_fk_sk"}})
+				in
+				    #"Renamed Columns12"
+
+	changedProperty = IsHidden
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,54 @@
+relationship 8db3f213-d89f-4b64-9bbf-680568941e38
+	joinOnDateBehavior: datePartOnly
+	fromColumn: DimCustomers.DateOfBirth
+	toColumn: LocalDateTable_196b5a16-d63d-47d1-ac09-3da339032ad4.Date
+
+relationship ce56ff6d-b00a-492b-af5c-53b0495432fc
+	joinOnDateBehavior: datePartOnly
+	fromColumn: DimCustomers.RegistrationDate
+	toColumn: LocalDateTable_5d74de81-90da-447f-8c81-507dd5985643.Date
+
+relationship dc581182-982d-4d29-985e-09b662c1a0e9
+	joinOnDateBehavior: datePartOnly
+	fromColumn: DimProducts.LaunchDate
+	toColumn: LocalDateTable_fc80cfce-29ca-4be7-83aa-4f153bd1ea84.Date
+
+relationship fdc9264f-db46-4d3a-9dab-b8275498f226
+	joinOnDateBehavior: datePartOnly
+	fromColumn: DimDate.Date
+	toColumn: LocalDateTable_fabfd42f-cce9-4813-85d5-3025bd9e78c3.Date
+
+relationship 7dbdacb2-4145-4668-9524-292262a54a0c
+	joinOnDateBehavior: datePartOnly
+	fromColumn: DimExchangeRates.Date
+	toColumn: LocalDateTable_c43d8035-207c-4ceb-8ab0-9a8ee5608ed2.Date
+
+relationship 7122dd49-cc46-4d55-a500-1eb174db97d3
+	joinOnDateBehavior: datePartOnly
+	fromColumn: FactSalesTransactions.TransactionDate
+	toColumn: LocalDateTable_82aca4c7-16fd-4542-8282-759cf62c47df.Date
+
+relationship 5e5b8776-2384-97e1-d413-6907a6750aad
+	fromColumn: FactSalesTransactions.channel_id_fk_sk
+	toColumn: DimSalesChannels.channel_id_pk_sk
+
+relationship 236f845b-662a-e382-8c37-024c5a6236eb
+	fromColumn: FactSalesTransactions.country_id_fk_sk
+	toColumn: DimCountries.country_id_pk_sk
+
+relationship d264a5ce-aa84-db13-8c32-f92ed6d37f1d
+	fromColumn: FactSalesTransactions.customer_id_fk_sk
+	toColumn: DimCustomers.customer_id_pk_sk
+
+relationship 8206619f-eafe-03b7-80d1-ac73df54f2ed
+	fromColumn: FactSalesTransactions.date_id_fk_sk
+	toColumn: DimDate.date_id_pk_sk
+
+relationship 531e729e-8d2a-b33f-aae8-46b62e4e90e1
+	fromColumn: FactSalesTransactions.exchange_rate_sk_fk
+	toColumn: DimExchangeRates.exchange_rate_sk_pk
+
+relationship de57a332-4a62-fd1e-d98e-04ce6aef1aed
+	fromColumn: FactSalesTransactions.product_id_fk_sk
+	toColumn: DimProducts.product_id_pk_sk
+

@@ -1,0 +1,108 @@
+table DimCountries
+	lineageTag: 01d2cd1c-8226-4748-be51-5f08b48bfb2a
+
+	column country_id_pk_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: 9c43b6ce-e1af-43d4-a217-b88d9893aee5
+		summarizeBy: none
+		sourceColumn: country_id_pk_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	column Column1
+		dataType: int64
+		formatString: 0
+		lineageTag: 4866477f-8932-48a3-9cbd-8339cf70e7ab
+		summarizeBy: none
+		sourceColumn: Column1
+
+		annotation SummarizationSetBy = Automatic
+
+	column CountryName
+		dataType: string
+		lineageTag: adc22b87-7bbe-458f-a898-32b1f35e3c87
+		summarizeBy: none
+		sourceColumn: CountryName
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Capital City / Capital Cities'
+		dataType: string
+		lineageTag: 1539cbd6-c094-49d3-abb4-054a64be66ec
+		summarizeBy: none
+		sourceColumn: Capital City / Capital Cities
+
+		annotation SummarizationSetBy = Automatic
+
+	column Population
+		dataType: int64
+		formatString: 0
+		lineageTag: 81c5e760-656c-4964-b59a-b80dbdcc9216
+		summarizeBy: none
+		sourceColumn: Population
+
+		annotation SummarizationSetBy = Automatic
+
+	column Area_km2
+		dataType: double
+		lineageTag: 70bcfb10-36c8-42c3-bd6c-5bede3e7d1db
+		summarizeBy: none
+		sourceColumn: Area_km2
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Area_mi2
+		dataType: double
+		lineageTag: d1c2e6f2-a15e-4f54-9d86-b9f5cbefcff6
+		summarizeBy: none
+		sourceColumn: Area_mi2
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Currency
+		dataType: string
+		lineageTag: 9fd37815-dfeb-4e5f-8d30-3fc009f9b3be
+		summarizeBy: none
+		sourceColumn: Currency
+
+		annotation SummarizationSetBy = Automatic
+
+	column Continent
+		dataType: string
+		lineageTag: 98462a6d-ccfb-478c-8b95-a9f4b982aa82
+		summarizeBy: none
+		sourceColumn: Continent
+
+		annotation SummarizationSetBy = Automatic
+
+	partition DimCountries = m
+		mode: import
+		source =
+				let
+				    Source = Table.Combine({Africa, Asia, Europe, #"North America", #"South America", Oceania}),
+				    #"Split Column by Delimiter" = Table.SplitColumn(Source, "Area", Splitter.SplitTextByEachDelimiter({"("}, QuoteStyle.Csv, false), {"Area.1", "Area.2"}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Split Column by Delimiter",{{"Area.1", type text}, {"Area.2", type text}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"Area.1", "Area_km2"}, {"Area.2", "Area_mi2"}}),
+				    #"Replaced Value" = Table.ReplaceValue(#"Renamed Columns","km2","",Replacer.ReplaceText,{"Area_km2"}),
+				    #"Replaced Value1" = Table.ReplaceValue(#"Replaced Value","sq mi)","",Replacer.ReplaceText,{"Area_mi2"}),
+				    #"Replaced Value2" = Table.ReplaceValue(#"Replaced Value1",")","",Replacer.ReplaceText,{"Area_mi2"}),
+				    #"Replaced Value3" = Table.ReplaceValue(#"Replaced Value2","mi","",Replacer.ReplaceText,{"Area_mi2"}),
+				    #"Replaced Value4" = Table.ReplaceValue(#"Replaced Value3","sq","",Replacer.ReplaceText,{"Area_mi2"}),
+				    #"Replaced Value5" = Table.ReplaceValue(#"Replaced Value4",",","",Replacer.ReplaceText,{"Area_km2", "Area_mi2"}),
+				    #"Added Index" = Table.AddIndexColumn(#"Replaced Value5", "Index", 1, 1, Int64.Type),
+				    #"Reordered Columns" = Table.ReorderColumns(#"Added Index",{"Index", "", "CountryName", "Capital City / Capital Cities", "Population", "Area_km2", "Area_mi2", "Currency", "Continent"}),
+				    #"Renamed Columns1" = Table.RenameColumns(#"Reordered Columns",{{"Index", "country_id_pk_sk"}}),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Renamed Columns1",{{"Population", Int64.Type}, {"Area_km2", type number}, {"Area_mi2", type number}, {"Currency", type text}, {"Continent", type text}}),
+				    #"Filtered Rows" = Table.SelectRows(#"Changed Type1", each true)
+				in
+				    #"Filtered Rows"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

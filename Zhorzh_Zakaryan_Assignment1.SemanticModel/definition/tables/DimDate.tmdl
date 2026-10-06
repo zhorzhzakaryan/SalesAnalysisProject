@@ -1,0 +1,124 @@
+table DimDate
+	lineageTag: 9d4c4db5-264e-4202-93f2-bd7c75443fa5
+
+	column Date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 9f80e6b4-38b0-47fd-b500-8d85ab834a97
+		summarizeBy: none
+		sourceColumn: Date
+
+		variation Variation
+			isDefault
+			relationship: fdc9264f-db46-4d3a-9dab-b8275498f226
+			defaultHierarchy: LocalDateTable_fabfd42f-cce9-4813-85d5-3025bd9e78c3.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Year
+		dataType: int64
+		formatString: 0
+		lineageTag: 9045f567-e507-4975-80e5-0caa8b96d5c3
+		summarizeBy: sum
+		sourceColumn: Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column Quarter
+		dataType: string
+		lineageTag: bdb76a44-5da2-4f64-b80f-27e5bb1e706c
+		summarizeBy: none
+		sourceColumn: Quarter
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthNumber
+		dataType: int64
+		formatString: 0
+		lineageTag: d6c1eb8b-6368-4cce-b142-bc9ca656b75a
+		summarizeBy: sum
+		sourceColumn: MonthNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthName
+		dataType: string
+		lineageTag: 362ed86b-0978-4822-a314-78f6501c6231
+		summarizeBy: none
+		sourceColumn: MonthName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Day
+		dataType: int64
+		formatString: 0
+		lineageTag: 2e8c0df4-6017-4fc9-9de7-6208871801a6
+		summarizeBy: sum
+		sourceColumn: Day
+
+		annotation SummarizationSetBy = Automatic
+
+	column DayName
+		dataType: string
+		lineageTag: 5fca498a-05da-46ef-b75c-5c969b6f0722
+		summarizeBy: none
+		sourceColumn: DayName
+
+		annotation SummarizationSetBy = Automatic
+
+	column WeekOfYear
+		dataType: int64
+		formatString: 0
+		lineageTag: 103c4496-44bd-4a31-aaa4-c0c5d33e9c85
+		summarizeBy: sum
+		sourceColumn: WeekOfYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsWeekend
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: e608069a-e2b5-407d-a6a0-0a2795476549
+		summarizeBy: none
+		sourceColumn: IsWeekend
+
+		annotation SummarizationSetBy = Automatic
+
+	column date_id_pk_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: 2522bc1b-5c7d-40a0-abab-4bebb18b70af
+		summarizeBy: none
+		sourceColumn: date_id_pk_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	partition DimDate = m
+		mode: import
+		source =
+				let
+				    StartDate = #date(2023, 1, 1),
+				    EndDate = #date(2023, 12, 31),
+				    NumberOfDays = Duration.Days(EndDate - StartDate) + 1,
+				    DateList = List.Dates(StartDate, NumberOfDays, #duration(1,0,0,0)),
+				    #"Converted to Table" = Table.FromList(DateList, Splitter.SplitByNothing(), {"Date"}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Converted to Table",{{"Date", type date}}),
+				    #"Added Year" = Table.AddColumn(#"Changed Type", "Year", each Date.Year([Date]), Int64.Type),
+				    #"Added Quarter" = Table.AddColumn(#"Added Year", "Quarter", each "Q" & Text.From(Date.QuarterOfYear([Date])), type text),
+				    #"Added Month Number" = Table.AddColumn(#"Added Quarter", "MonthNumber", each Date.Month([Date]), Int64.Type),
+				    #"Added Month Name" = Table.AddColumn(#"Added Month Number", "MonthName", each Date.MonthName([Date]), type text),
+				    #"Added Day" = Table.AddColumn(#"Added Month Name", "Day", each Date.Day([Date]), Int64.Type),
+				    #"Added Day Name" = Table.AddColumn(#"Added Day", "DayName", each Date.DayOfWeekName([Date]), type text),
+				    #"Added Week Number" = Table.AddColumn(#"Added Day Name", "WeekOfYear", each Date.WeekOfYear([Date]), Int64.Type),
+				    #"Added IsWeekend" = Table.AddColumn(#"Added Week Number", "IsWeekend", each Date.DayOfWeek([Date], Day.Monday) >= 5, type logical),
+				    #"Added Date SK" = Table.AddColumn(#"Added IsWeekend", "date_id_pk_sk", each Date.ToText([Date], "yyyyMMdd"), type text),
+				    #"Changed SK Type" = Table.TransformColumnTypes(#"Added Date SK",{{"date_id_pk_sk", Int64.Type}})
+				in
+				    #"Changed SK Type"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

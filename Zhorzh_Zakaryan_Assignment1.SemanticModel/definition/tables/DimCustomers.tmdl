@@ -1,0 +1,133 @@
+table DimCustomers
+	lineageTag: 94a56636-7958-48a6-b8d2-af30e0fc8d2d
+
+	column customer_id_pk_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: 7ac4811d-007f-4a58-8004-eaac99d27289
+		summarizeBy: none
+		sourceColumn: customer_id_pk_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	column customer_id_nk
+		dataType: int64
+		formatString: 0
+		lineageTag: ac32ac79-33d5-4807-bb61-ec3153cb49f3
+		summarizeBy: sum
+		sourceColumn: customer_id_nk
+
+		annotation SummarizationSetBy = Automatic
+
+	column FirstName
+		dataType: string
+		lineageTag: 41c08bf3-22b6-4709-ac7f-26f70fafacd1
+		summarizeBy: none
+		sourceColumn: FirstName
+
+		annotation SummarizationSetBy = Automatic
+
+	column LastName
+		dataType: string
+		lineageTag: 788aa068-4c58-4956-8906-8723ae28ae22
+		summarizeBy: none
+		sourceColumn: LastName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Email
+		dataType: string
+		lineageTag: e75636b1-5aad-492d-8d5d-88c176634864
+		summarizeBy: none
+		sourceColumn: Email
+
+		annotation SummarizationSetBy = Automatic
+
+	column DateOfBirth
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: c67283f3-f877-4a6b-8a0d-1229bc04ae31
+		summarizeBy: none
+		sourceColumn: DateOfBirth
+
+		variation Variation
+			isDefault
+			relationship: 8db3f213-d89f-4b64-9bbf-680568941e38
+			defaultHierarchy: LocalDateTable_196b5a16-d63d-47d1-ac09-3da339032ad4.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Gender
+		dataType: string
+		lineageTag: cb699855-1283-415a-803e-e416565992e5
+		summarizeBy: none
+		sourceColumn: Gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column LoyaltyStatus
+		dataType: string
+		lineageTag: 37aaff11-14c4-4b66-aee8-879bc795650e
+		summarizeBy: none
+		sourceColumn: LoyaltyStatus
+
+		annotation SummarizationSetBy = Automatic
+
+	column RegistrationDate
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 83853ef2-88af-498a-b331-b9b59d59eb21
+		summarizeBy: none
+		sourceColumn: RegistrationDate
+
+		variation Variation
+			isDefault
+			relationship: ce56ff6d-b00a-492b-af5c-53b0495432fc
+			defaultHierarchy: LocalDateTable_5d74de81-90da-447f-8c81-507dd5985643.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column PreferredLanguage
+		dataType: string
+		lineageTag: d746e898-3392-493e-9bda-f5fbafb04eb5
+		summarizeBy: none
+		sourceColumn: PreferredLanguage
+
+		annotation SummarizationSetBy = Automatic
+
+	column country_id_fk_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: 29ef8d9c-d797-4f29-868b-aa9b98447f9b
+		summarizeBy: sum
+		sourceColumn: country_id_fk_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	partition DimCustomers = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(FolderPathParam & "RawData\ecommerce_customers.csv"), [Delimiter=",", Columns=11, Encoding=65001, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"customer_id_pk", Int64.Type}, {"FirstName", type text}, {"LastName", type text}, {"Email", type text}, {"DateOfBirth", type date}, {"Gender", type text}, {"country_id_fk", Int64.Type}, {"CountryName", type text}, {"LoyaltyStatus", type text}, {"RegistrationDate", type date}, {"PreferredLanguage", type text}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"customer_id_pk", "customer_id_nk"}}),
+				    #"Added Index" = Table.AddIndexColumn(#"Renamed Columns", "Index", 1, 1, Int64.Type),
+				    #"Reordered Columns" = Table.ReorderColumns(#"Added Index",{"Index", "customer_id_nk", "FirstName", "LastName", "Email", "DateOfBirth", "Gender", "country_id_fk", "CountryName", "LoyaltyStatus", "RegistrationDate", "PreferredLanguage"}),
+				    #"Renamed Columns1" = Table.RenameColumns(#"Reordered Columns",{{"Index", "customer_id_pk_sk"}}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Renamed Columns1",{"country_id_fk"}),
+				    #"Merged Queries" = Table.NestedJoin(#"Removed Columns", {"CountryName"}, DimCountries, {"CountryName"}, "DimCountries", JoinKind.LeftOuter),
+				    #"Expanded DimCountries" = Table.ExpandTableColumn(#"Merged Queries", "DimCountries", {"country_id_pk_sk"}, {"country_id_pk_sk"}),
+				    #"Renamed Columns2" = Table.RenameColumns(#"Expanded DimCountries",{{"country_id_pk_sk", "country_id_fk_sk"}}),
+				    #"Removed Columns1" = Table.RemoveColumns(#"Renamed Columns2",{"CountryName"})
+				in
+				    #"Removed Columns1"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

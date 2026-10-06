@@ -1,0 +1,74 @@
+table DimExchangeRates
+	lineageTag: a8be0467-99c6-492b-88f4-076a350837e8
+
+	column exchange_rate_sk_pk
+		dataType: string
+		lineageTag: 22d63234-36be-4b48-b4c4-890fcde2a394
+		summarizeBy: none
+		sourceColumn: exchange_rate_sk_pk
+
+		annotation SummarizationSetBy = Automatic
+
+	column Date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: a0ba48d8-2768-435f-8234-2d611d184513
+		summarizeBy: none
+		sourceColumn: Date
+
+		variation Variation
+			isDefault
+			relationship: 7dbdacb2-4145-4668-9524-292262a54a0c
+			defaultHierarchy: LocalDateTable_c43d8035-207c-4ceb-8ab0-9a8ee5608ed2.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Currency
+		dataType: string
+		lineageTag: cf58628c-d546-4b56-92f3-25773cb71b30
+		summarizeBy: none
+		sourceColumn: Currency
+
+		annotation SummarizationSetBy = Automatic
+
+	column CurrencyPair
+		dataType: string
+		lineageTag: 120f4a96-6504-48b9-874d-e4be3cb82ce5
+		summarizeBy: none
+		sourceColumn: CurrencyPair
+
+		annotation SummarizationSetBy = Automatic
+
+	column Rate
+		dataType: double
+		lineageTag: 1597d298-85da-4fe2-a48a-e8bd13dbd721
+		summarizeBy: sum
+		sourceColumn: Rate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition DimExchangeRates = m
+		mode: import
+		source =
+				let
+				    Source = Json.Document(Web.Contents("https://api.frankfurter.app/2023-01-01..2023-12-31", [Query=[from="USD", to="AUD,BRL,CAD,CNY,EUR,GBP,INR,JPY,MXN,NZD,ZAR"]])),
+				    rates = Source[rates],
+				    ToTable = Record.ToTable(rates),
+				    RenameCols = Table.RenameColumns(ToTable, {{"Name", "Date"}, {"Value", "RatesRecord"}}),
+				    ExpandRates = Table.ExpandRecordColumn(RenameCols, "RatesRecord", {"AUD","BRL","CAD","CNY","EUR","GBP","INR","JPY","MXN","NZD","ZAR"}),
+				    Unpivot = Table.UnpivotOtherColumns(ExpandRates, {"Date"}, "Currency", "Rate"),
+				    AddPair = Table.AddColumn(Unpivot, "CurrencyPair", each [Currency] & "USD"),
+				    ChangedType = Table.TransformColumnTypes(AddPair,{{"Date", type date}, {"Rate", type number}}),
+				    AddSK = Table.AddColumn(ChangedType, "exchange_rate_sk_pk", each Date.ToText([Date], "yyyyMMdd") & "_" & [CurrencyPair]),
+				    Final = Table.SelectColumns(AddSK, {"exchange_rate_sk_pk", "Date", "Currency", "CurrencyPair", "Rate"})
+				in
+				    Final
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
